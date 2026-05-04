@@ -22,33 +22,36 @@
   <canvas id="qr"></canvas>
 </div>
 
-<div class="grid">
+<div class="content">
 
-  <div class="box" onclick="openPopup('komIhag')">
-    <ul id="komihag-list"></ul>
+  <div class="grid">
+
+    <div class="box" onclick="openPopup('komIhag')">
+      <ul id="komihag-list"></ul>
+    </div>
+
+    <div class="box pink" onclick="openPopup('rutiner')">
+      <ul id="rutiner-list"></ul>
+    </div>
+
+    <div class="box" onclick="openPopup('attGora')">
+      <ul id="attgora-list"></ul>
+    </div>
+
+    <div class="box" onclick="openPopup('extra')">
+      <ul id="extra-list"></ul>
+    </div>
+
   </div>
 
-  <div class="box pink" onclick="openPopup('rutiner')">
-    <ul id="rutiner-list"></ul>
-  </div>
-
-  <div class="box" onclick="openPopup('attGora')">
-    <ul id="attgora-list"></ul>
-  </div>
-
-  <div class="box" onclick="openPopup('extra')">
-    <ul id="extra-list"></ul>
+  <div class="calendar-wrapper">
+    <iframe class="calendar"
+      src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
+    </iframe>
   </div>
 
 </div>
 
-<div class="calendar-wrapper">
-  <iframe class="calendar"
-  src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
-  </iframe>
-</div>
-
-<!-- POPUP -->
 <div id="popup" class="popup hidden">
   <div class="popup-card">
     <h3 id="popup-title"></h3>
