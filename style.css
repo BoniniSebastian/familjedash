@@ -1,1 +1,41 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #071a26;
+  color: white;
+}
 
+.container {
+  padding: 40px;
+}
+
+.box {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.input-row {
+  display: flex;
+  margin-top: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 8px;
+}
+
+button {
+  padding: 8px 12px;
+}
