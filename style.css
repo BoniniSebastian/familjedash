@@ -111,16 +111,22 @@ li {
   margin:6px 0;
 }
 
+#komihag-list li::before,
+#attgora-list li::before {
+  content: "";
+  display:inline-block;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  margin-right:10px;
+}
+
 #komihag-list li::before {
-  content: "•";
-  color:#00cfff;
-  margin-right:8px;
+  background:#00cfff;
 }
 
 #attgora-list li::before {
-  content: "•";
-  color:#ff8c42;
-  margin-right:8px;
+  background:#ff8c42;
 }
 
 /* CALENDAR */
