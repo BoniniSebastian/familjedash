@@ -1,70 +1,40 @@
-<!DOCTYPE html>
-<html lang="sv">
-<head>
-  <meta charset="UTF-8" />
-  <title>Family Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
+<div class="grid">
 
-<body>
-
-  <!-- HEADER -->
-  <div class="header">
-    <div class="time">10:31</div>
-    <div class="date">Måndag 4 maj</div>
-    <div class="weather">8° Regn</div>
+  <div class="box" onclick="openPopup('komihag')">
+    <h3>Kom ihåg</h3>
+    <ul id="komihag-list"></ul>
   </div>
 
-  <!-- GRID -->
-  <div class="grid">
-
-    <!-- KOM IHÅG -->
-    <div class="box">
-      <h3>Kom ihåg</h3>
-      <ul id="komihag-list"></ul>
-
-      <div class="input-row">
-        <input id="komihag-input" placeholder="Skriv..." />
-        <button onclick="addKomIhag()">+</button>
-      </div>
-    </div>
-
-    <!-- RUTINER -->
-    <div class="box">
-      <h3>Rutiner</h3>
-      <p>21.00 Borsta tänderna</p>
-      <p>21.30 Släck lampan</p>
-    </div>
-
-    <!-- ATT GÖRA -->
-    <div class="box">
-      <h3>Att göra</h3>
-      <ul id="attgora-list"></ul>
-
-      <div class="input-row">
-        <input id="attgora-input" placeholder="Skriv..." />
-        <button onclick="addAttGora()">+</button>
-      </div>
-    </div>
-
-    <!-- NÄSTA -->
-    <div class="box">
-      <h3>Nästa</h3>
-      <div id="next-event">Laddar...</div>
-    </div>
-
+  <div class="box">
+    <h3>Rutiner</h3>
+    <p>21.00 Borsta tänderna</p>
+    <p>21.30 Släck lampan</p>
   </div>
 
-  <!-- BILDSEKTION -->
-  <div id="image-section"></div>
+  <div class="box" onclick="openPopup('attgora')">
+    <h3>Att göra</h3>
+    <ul id="attgora-list"></ul>
+  </div>
 
-  <!-- GOOGLE CALENDAR -->
-  <iframe
-    class="calendar"
-    src="https://calendar.google.com/calendar/embed?src=DIN_KALENDER_URL"
-  ></iframe>
+  <div class="box">
+    <h3>Nästa</h3>
+    <div>—</div>
+  </div>
 
-  <script type="module" src="app.js"></script>
+</div>
 
-</body>
-</html>
+<!-- POPUP -->
+<div id="popup" class="popup hidden">
+  <div class="popup-content">
+    <h3 id="popup-title"></h3>
+
+    <ul id="popup-list"></ul>
+
+    <div class="popup-input">
+      <input id="popup-input" placeholder="Skriv..." />
+      <button onclick="addItem()">+</button>
+    </div>
+
+    <button onclick="closePopup()">Stäng</button>
+  </div>
+</div>
