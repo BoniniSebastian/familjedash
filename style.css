@@ -1,94 +1,41 @@
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #071a26;
-  color: white;
-}
-
-/* HEADER */
-.header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-}
-
-.time {
-  font-size: 48px;
-  font-weight: bold;
-}
-
-.date {
-  font-size: 20px;
-}
-
-.weather {
-  margin-left: auto;
-}
-
-/* GRID FIX */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 200px 200px; /* 👈 fix */
-  gap: 10px;
+  grid-template-rows: 220px 220px;
+  gap: 12px;
   padding: 20px;
 }
 
 .box {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.04);
   padding: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* LIST */
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-li {
-  margin: 6px 0;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-/* INPUT */
-.input-row {
+/* POPUP */
+
+.popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.popup-content {
+  background: #0d2533;
+  padding: 20px;
+  width: 400px;
+  border-radius: 8px;
+}
+
+.popup-input {
   display: flex;
   margin-top: 10px;
-}
-
-input {
-  flex: 1;
-  padding: 8px;
-}
-
-button {
-  padding: 8px 12px;
-}
-
-/* IMAGE */
-#image-section {
-  width: 100%;
-  height: 140px;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  transition: opacity 1s ease;
-}
-
-#image-section::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-}
-
-/* CALENDAR */
-.calendar {
-  width: 100%;
-  height: 300px;
-  border: none;
 }
