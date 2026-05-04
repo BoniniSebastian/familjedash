@@ -32,7 +32,7 @@ setInterval(()=>{
     n.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
 },1000);
 
-/* IMAGE ROTATION */
+/* IMAGE */
 const imgs=[
   "assets/foton/1.jpg",
   "assets/foton/2.jpg",
@@ -78,7 +78,6 @@ window.openPopup=(type)=>{
   current=type;
 
   document.getElementById("popup").classList.remove("hidden");
-  
 
   const list=document.getElementById("popup-list");
 
@@ -129,9 +128,36 @@ window.addItem=async ()=>{
   input.value="";
 };
 
+/* WEATHER */
+async function loadWeather(){
+  const res = await fetch(
+    "https://api.open-meteo.com/v1/forecast?latitude=59.3&longitude=18.4&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FStockholm"
+  );
+
+  const data = await res.json();
+
+  const temp = Math.round(data.current_weather.temperature);
+  const max = Math.round(data.daily.temperature_2m_max[0]);
+  const min = Math.round(data.daily.temperature_2m_min[0]);
+
+  let icon="☀️";
+  const code=data.current_weather.weathercode;
+
+  if(code>2 && code<50) icon="☁️";
+  if(code>=50 && code<70) icon="🌧️";
+  if(code>=70) icon="❄️";
+
+  document.getElementById("weather-icon").textContent=icon;
+  document.getElementById("weather-main").textContent=temp+"°";
+  document.getElementById("weather-feels").textContent="Känns som "+temp+"°";
+  document.getElementById("forecast").textContent="Max "+max+"° / Min "+min+"°";
+}
+
+loadWeather();
+
 /* QR */
 QRCode.toCanvas(document.getElementById("qr"), window.location.href, {
-  width: 20
+  width:20
 });
 
 /* AUTO REFRESH */
