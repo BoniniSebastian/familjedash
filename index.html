@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Family Dashboard</title>
 <link rel="stylesheet" href="style.css">
+
+<!-- QR FIX -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
 </head>
+
 <body>
 
 <div class="blob"></div>
@@ -17,20 +22,20 @@
 
 <div class="grid">
 
-  <div class="box weather-box">
+  <div class="box" id="weather-box">
     <div id="weather-main"></div>
     <div id="forecast"></div>
   </div>
 
-  <div class="box pink" onclick="openPopup('komIhag')">
+  <div class="box pink">
     <ul id="komihag-list"></ul>
   </div>
 
-  <div class="box" onclick="openPopup('rutiner')">
+  <div class="box">
     <ul id="rutiner-list"></ul>
   </div>
 
-  <div class="box" onclick="openPopup('attGora')">
+  <div class="box">
     <ul id="attgora-list"></ul>
   </div>
 
@@ -43,18 +48,6 @@
 <iframe class="calendar"
 src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
 </iframe>
-
-<!-- POPUP -->
-<div id="popup" class="popup hidden">
-  <div class="popup-content">
-    <h3 id="popup-title"></h3>
-    <ul id="popup-list"></ul>
-
-    <input id="popup-input" placeholder="Skriv...">
-    <button onclick="addItem()">+</button>
-    <button onclick="closePopup()">Stäng</button>
-  </div>
-</div>
 
 <script type="module" src="app.js"></script>
 </body>
