@@ -5,21 +5,27 @@ body {
   color:white;
 }
 
-/* BACKGROUND IMAGE */
+/* HERO (bild + header) */
+.hero {
+  position:relative;
+  height:260px;
+  overflow:hidden;
+}
+
+/* Bild */
 #image-bg {
   position:absolute;
-  top:0;
-  left:0;
   width:100%;
-  height:240px;
+  height:100%;
   background-size:cover;
   background-position:center;
+  filter:brightness(0.6);
   z-index:-2;
 }
 
-/* BLOBB */
+/* Blob */
 .blob {
-  position:fixed;
+  position:absolute;
   width:900px;
   height:900px;
   background: radial-gradient(circle, #00cfff, transparent);
@@ -30,12 +36,11 @@ body {
 
 @keyframes move {
   0% { transform: translate(0,0); }
-  100% { transform: translate(150px,120px); }
+  100% { transform: translate(200px,120px); }
 }
 
 /* HEADER */
 .header {
-  height:140px;
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -43,17 +48,18 @@ body {
 }
 
 #time {
-  font-size:60px;
+  font-size:64px;
+  font-weight:bold;
 }
 
 #qr {
-  width:30px;
-  height:30px;
+  width:28px;
+  height:28px;
 }
 
 /* CONTENT */
 .content {
-  padding-top:20px;
+  margin-top:20px;
 }
 
 /* GRID */
@@ -71,9 +77,20 @@ body {
   cursor:pointer;
 }
 
-/* FIXAD ROSA */
 .pink {
-  background:#d83a7a;
+  background:#c93a6b;
+}
+
+/* CALENDAR */
+.calendar-wrapper {
+  margin-top:40px;
+  padding:0 20px 40px;
+}
+
+.calendar {
+  width:100%;
+  height:320px;
+  border:none;
 }
 
 /* POPUP */
@@ -86,64 +103,11 @@ body {
   align-items:center;
 }
 
-.hidden {
-  display:none;
-}
+.hidden { display:none; }
 
 .popup-card {
   width:420px;
   background:#0d2533;
   padding:25px;
   border-radius:14px;
-}
-
-.popup-card ul li {
-  display:flex;
-  justify-content:space-between;
-  margin:10px 0;
-}
-
-.popup-card ul li button {
-  background:none;
-  border:none;
-  color:#ff5c5c;
-  cursor:pointer;
-}
-
-.input-row {
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-
-.input-row input {
-  flex:1;
-  padding:12px;
-  border:none;
-}
-
-.input-row button {
-  padding:12px;
-  background:#00cfff;
-  border:none;
-}
-
-.close {
-  margin-top:12px;
-  width:100%;
-  padding:10px;
-  background:#333;
-  border:none;
-}
-
-/* CALENDAR FIX */
-.calendar-wrapper {
-  margin-top:40px;
-  padding:0 20px 40px;
-}
-
-.calendar {
-  width:100%;
-  height:320px;
-  border:none;
 }
