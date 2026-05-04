@@ -10,7 +10,7 @@ body {
   position:fixed;
   width:800px;
   height:800px;
-  background: radial-gradient(circle, rgba(0,200,255,0.35), transparent);
+  background: radial-gradient(circle, rgba(0,200,255,0.4), transparent);
   top:-200px;
   right:-200px;
   filter: blur(140px);
@@ -19,7 +19,6 @@ body {
 /* HEADER */
 .header {
   display:flex;
-  align-items:center;
   justify-content:space-between;
   padding:20px;
 }
@@ -29,9 +28,10 @@ body {
   font-weight:bold;
 }
 
+/* QR */
 #qr {
-  width:80px;
-  height:80px;
+  width:50px;
+  height:50px;
 }
 
 /* GRID */
@@ -45,9 +45,9 @@ body {
 .box {
   background: rgba(255,255,255,0.06);
   padding:20px;
-  border-radius:12px;
   min-height:150px;
   cursor:pointer;
+  border-radius:0; /* FIX */
 }
 
 .pink {
@@ -66,13 +66,18 @@ li {
 
 /* WEATHER */
 #weather-main {
-  font-size:40px;
-  font-weight:bold;
+  font-size:36px;
+}
+
+#weather-feels {
+  font-size:14px;
+  opacity:0.7;
 }
 
 #forecast {
+  margin-top:10px;
   font-size:14px;
-  opacity:0.7;
+  opacity:0.8;
 }
 
 /* IMAGE */
@@ -97,7 +102,7 @@ li {
 .popup {
   position:fixed;
   inset:0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.85);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -110,12 +115,5 @@ li {
 .popup-content {
   background:#0d2533;
   padding:20px;
-  border-radius:10px;
-  width:300px;
-}
-
-.popup-content input {
-  width:100%;
-  margin-top:10px;
-  padding:10px;
+  width:320px;
 }
