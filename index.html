@@ -6,13 +6,11 @@
 <title>Family Dashboard</title>
 
 <link rel="stylesheet" href="style.css">
-
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
 
 <body>
 
-<!-- HERO (bild + header) -->
 <div class="hero">
   <div id="image-bg"></div>
   <div class="blob"></div>
@@ -26,34 +24,32 @@
   </div>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
 
   <div class="grid">
 
-    <!-- KOM IHÅG -->
     <div class="box" onclick="openPopup('komIhag')">
       <ul id="komihag-list"></ul>
     </div>
 
-    <!-- RUTINER -->
     <div class="box pink" onclick="openPopup('rutiner')">
       <ul id="rutiner-list"></ul>
     </div>
 
-    <!-- ATT GÖRA -->
     <div class="box" onclick="openPopup('attGora')">
       <ul id="attgora-list"></ul>
     </div>
 
-    <!-- EXTRA -->
-    <div class="box" onclick="openPopup('extra')">
-      <ul id="extra-list"></ul>
+    <!-- WEATHER -->
+    <div class="box weather-box">
+      <div id="weather-icon"></div>
+      <div id="weather-main"></div>
+      <div id="weather-feels"></div>
+      <div id="forecast"></div>
     </div>
 
   </div>
 
-  <!-- KALENDER -->
   <div class="calendar-wrapper">
     <iframe
       class="calendar"
@@ -63,10 +59,8 @@
 
 </div>
 
-<!-- POPUP -->
 <div id="popup" class="popup hidden">
   <div class="popup-card">
-    <h3 id="popup-title"></h3>
 
     <ul id="popup-list"></ul>
 
