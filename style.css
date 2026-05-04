@@ -5,14 +5,14 @@ body {
   color:white;
 }
 
-/* HERO (bild + header) */
+/* HERO */
 .hero {
   position:relative;
   height:260px;
   overflow:hidden;
 }
 
-/* Bild */
+/* BILD */
 #image-bg {
   position:absolute;
   width:100%;
@@ -23,7 +23,7 @@ body {
   z-index:-2;
 }
 
-/* Blob */
+/* BLOBB */
 .blob {
   position:absolute;
   width:900px;
@@ -52,6 +52,12 @@ body {
   font-weight:bold;
 }
 
+#date {
+  font-size:16px;
+  opacity:0.8;
+}
+
+/* QR */
 #qr {
   width:28px;
   height:28px;
@@ -77,8 +83,20 @@ body {
   cursor:pointer;
 }
 
+/* ROSA (FIXAD) */
 .pink {
   background:#c93a6b;
+}
+
+/* LISTOR */
+ul {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+li {
+  margin:6px 0;
 }
 
 /* CALENDAR */
@@ -103,11 +121,53 @@ body {
   align-items:center;
 }
 
-.hidden { display:none; }
+.hidden {
+  display:none;
+}
 
 .popup-card {
   width:420px;
   background:#0d2533;
   padding:25px;
   border-radius:14px;
+}
+
+.popup-card ul li {
+  display:flex;
+  justify-content:space-between;
+  margin:10px 0;
+}
+
+.popup-card ul li button {
+  background:none;
+  border:none;
+  color:#ff5c5c;
+  cursor:pointer;
+}
+
+/* INPUT */
+.input-row {
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.input-row input {
+  flex:1;
+  padding:12px;
+  border:none;
+}
+
+.input-row button {
+  padding:12px;
+  background:#00cfff;
+  border:none;
+}
+
+.close {
+  margin-top:12px;
+  width:100%;
+  padding:10px;
+  background:#333;
+  border:none;
 }
