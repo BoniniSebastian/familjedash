@@ -111,6 +111,14 @@ li {
   margin:6px 0;
 }
 
+#komihag-list li::before {
+  color:#00cfff;
+}
+
+#attgora-list li::before {
+  color:#ff8c42;
+}
+
 /* CALENDAR */
 .calendar-wrapper {
   margin-top:80px;
