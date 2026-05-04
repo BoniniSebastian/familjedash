@@ -7,7 +7,8 @@ import {
   query,
   orderBy,
   deleteDoc,
-  doc
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* FIREBASE */
@@ -21,13 +22,12 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* CLOCK */
-setInterval(() => {
-  const now = new Date();
+setInterval(()=>{
+  const n=new Date();
   document.getElementById("time").textContent =
-    now.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
-
+    n.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
   document.getElementById("date").textContent =
-    now.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
+    n.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
 },1000);
 
 /* LISTS */
@@ -39,13 +39,6 @@ function bind(col,id){
     snap.forEach(d=>{
       const li=document.createElement("li");
       li.textContent=d.data().text;
-
-      li.onclick = () => {
-        if(confirm("Ta bort?")){
-          deleteDoc(doc(db,col,d.id));
-        }
-      };
-
       el.appendChild(li);
     });
   });
@@ -64,14 +57,31 @@ window.openPopup = (type)=>{
   document.getElementById("popup-title").textContent=type;
 
   const list=document.getElementById("popup-list");
-  list.innerHTML="";
 
   const q=query(collection(db,type),orderBy("createdAt","asc"));
+
   onSnapshot(q,snap=>{
     list.innerHTML="";
     snap.forEach(d=>{
       const li=document.createElement("li");
-      li.textContent=d.data().text;
+
+      const span=document.createElement("span");
+      span.textContent=d.data().text;
+
+      span.onclick = async ()=>{
+        const val = prompt("Ändra", d.data().text);
+        if(val){
+          await updateDoc(doc(db,type,d.id),{text:val});
+        }
+      };
+
+      const del=document.createElement("button");
+      del.textContent="X";
+      del.onclick=()=>deleteDoc(doc(db,type,d.id));
+
+      li.appendChild(span);
+      li.appendChild(del);
+
       list.appendChild(li);
     });
   });
@@ -83,6 +93,7 @@ window.closePopup = ()=>{
 
 window.addItem = async ()=>{
   const input=document.getElementById("popup-input");
+
   if(!input.value) return;
 
   await addDoc(collection(db,current),{
@@ -123,8 +134,11 @@ async function weather(){
   document.getElementById("weather-main").innerHTML =
     `${Math.round(d.current_weather.temperature)}°`;
 
+  document.getElementById("weather-feels").innerHTML =
+    `Känns som ${Math.round(d.current_weather.temperature)}°`;
+
   document.getElementById("forecast").innerHTML =
-    `Max ${Math.round(d.daily.temperature_2m_max[0])}° / Min ${Math.round(d.daily.temperature_2m_min[0])}°`;
+    `${Math.round(d.daily.temperature_2m_max[0])}° / ${Math.round(d.daily.temperature_2m_min[0])}°`;
 }
 weather();
 
