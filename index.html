@@ -8,8 +8,17 @@
 
 <body>
 
-  <div class="container">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="time">10:31</div>
+    <div class="date">Måndag 4 maj</div>
+    <div class="weather">8° Regn</div>
+  </div>
 
+  <!-- GRID -->
+  <div class="grid">
+
+    <!-- KOM IHÅG -->
     <div class="box">
       <h3>Kom ihåg</h3>
       <ul id="komihag-list"></ul>
@@ -20,7 +29,40 @@
       </div>
     </div>
 
+    <!-- RUTINER -->
+    <div class="box">
+      <h3>Rutiner</h3>
+      <p>21.00 Borsta tänderna</p>
+      <p>21.30 Släck lampan</p>
+    </div>
+
+    <!-- ATT GÖRA -->
+    <div class="box">
+      <h3>Att göra</h3>
+      <ul id="attgora-list"></ul>
+
+      <div class="input-row">
+        <input id="attgora-input" placeholder="Skriv..." />
+        <button onclick="addAttGora()">+</button>
+      </div>
+    </div>
+
+    <!-- NÄSTA -->
+    <div class="box">
+      <h3>Nästa</h3>
+      <div id="next-event">Laddar...</div>
+    </div>
+
   </div>
+
+  <!-- BILDSEKTION -->
+  <div id="image-section"></div>
+
+  <!-- GOOGLE CALENDAR -->
+  <iframe
+    class="calendar"
+    src="https://calendar.google.com/calendar/embed?src=DIN_KALENDER_URL"
+  ></iframe>
 
   <script type="module" src="app.js"></script>
 
