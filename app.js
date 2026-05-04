@@ -6,15 +6,14 @@ import {
   onSnapshot,
   query,
   orderBy,
-  limit,
   deleteDoc,
-  doc
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* =====================
-   FIREBASE
-===================== */
+import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js";
 
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyBDf7wFAybRoUoofVXr-4vJMFXwfmATn8k",
   authDomain: "familydash-9d0dd.firebaseapp.com",
@@ -27,83 +26,50 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* =====================
-   GENERIC LIST LOGIC
-===================== */
+/* CLOCK */
+setInterval(() => {
+  const now = new Date();
+  document.getElementById("time").textContent =
+    now.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("date").textContent =
+    now.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
+},1000);
 
-function bindList({ colName, listId, moreId }) {
-  const ref = collection(db, colName);
-  const q = query(ref, orderBy("createdAt", "desc"));
-
-  onSnapshot(q, (snap) => {
-    const listEl = document.getElementById(listId);
-    const moreEl = document.getElementById(moreId);
-
-    const items = [];
-    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-
-    // visa max 8
-    const visible = items.slice(0, 8);
-    const hiddenCount = Math.max(items.length - 8, 0);
-
-    listEl.innerHTML = "";
-    visible.forEach(item => {
+/* LISTS */
+function bind(colName, id) {
+  const q = query(collection(db, colName), orderBy("createdAt","desc"));
+  onSnapshot(q, snap => {
+    const el = document.getElementById(id);
+    el.innerHTML = "";
+    snap.forEach(d => {
       const li = document.createElement("li");
-      li.textContent = item.text;
-      listEl.appendChild(li);
-    });
+      li.textContent = d.data().text;
 
-    moreEl.textContent = hiddenCount > 0 ? `+${hiddenCount} fler` : "";
+      li.onclick = async () => {
+        const newText = prompt("Ändra:", d.data().text);
+        if(newText) {
+          await updateDoc(doc(db,colName,d.id), { text:newText });
+        }
+      };
+
+      li.ondblclick = () => deleteDoc(doc(db,colName,d.id));
+
+      el.appendChild(li);
+    });
   });
 }
 
-/* Bind dashboard lists */
-bindList({ colName: "komIhag", listId: "komihag-list", moreId: "komihag-more" });
-bindList({ colName: "attGora", listId: "attgora-list", moreId: "attgora-more" });
+bind("komIhag","komihag-list");
+bind("attGora","attgora-list");
+bind("rutiner","rutiner-list");
 
-/* =====================
-   POPUP
-===================== */
-
-let currentType = null;
-let unsubscribePopup = null;
+/* POPUP */
+let current = "";
 
 window.openPopup = (type) => {
-  currentType = type;
-
+  current = type;
   document.getElementById("popup").classList.remove("hidden");
-  document.getElementById("popup-title").textContent =
-    type === "komihag" ? "Kom ihåg" : "Att göra";
-
-  const listEl = document.getElementById("popup-list");
-  listEl.innerHTML = "";
-
-  const colName = type === "komihag" ? "komIhag" : "attGora";
-  const ref = collection(db, colName);
-  const q = query(ref, orderBy("createdAt", "desc"));
-
-  if (unsubscribePopup) unsubscribePopup();
-
-  unsubscribePopup = onSnapshot(q, (snap) => {
-    listEl.innerHTML = "";
-
-    snap.forEach((docSnap) => {
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>${docSnap.data().text}</span>
-        <span style="opacity:.6">Ta bort</span>
-      `;
-
-      li.onclick = () => deleteDoc(doc(db, colName, docSnap.id));
-
-      listEl.appendChild(li);
-    });
-  });
-
-  // fokus direkt
-  setTimeout(() => {
-    document.getElementById("popup-input").focus();
-  }, 50);
+  document.getElementById("popup-title").textContent = type;
 };
 
 window.closePopup = () => {
@@ -112,67 +78,49 @@ window.closePopup = () => {
 
 window.addItem = async () => {
   const input = document.getElementById("popup-input");
-  const text = input.value.trim();
-  if (!text) return;
+  if(!input.value) return;
 
-  const colName = currentType === "komihag" ? "komIhag" : "attGora";
-  const ref = collection(db, colName);
-
-  await addDoc(ref, {
-    text,
+  await addDoc(collection(db,current), {
+    text: input.value,
     createdAt: Date.now()
   });
 
   input.value = "";
-  input.focus();
 };
 
-/* =====================
-   IMAGE FEED
-===================== */
-
-const images = [
-  "assets/foton/img1.jpg",
-  "assets/foton/img2.jpg",
-  "assets/foton/img3.jpg"
+/* IMAGE */
+const imgs = [
+  "assets/foton/1.jpg",
+  "assets/foton/2.jpg",
+  "assets/foton/3.jpg",
+  "assets/foton/4.jpg",
+  "assets/foton/5.jpg"
 ];
 
-let current = 0;
-const section = document.getElementById("image-section");
+let i = 0;
+const sec = document.getElementById("image-section");
 
-function setImage(idx) {
-  section.style.backgroundImage = `url(${images[idx]})`;
+function change() {
+  sec.style.opacity = 0;
+  setTimeout(()=>{
+    i=(i+1)%imgs.length;
+    sec.style.backgroundImage=`url(${imgs[i]})`;
+    sec.style.opacity=1;
+  },300);
 }
+sec.style.backgroundImage=`url(${imgs[0]})`;
+setInterval(change,600000);
 
-function changeImage() {
-  section.style.opacity = 0;
-  setTimeout(() => {
-    current = (current + 1) % images.length;
-    setImage(current);
-    section.style.opacity = 1;
-  }, 500);
+/* WEATHER */
+async function weather() {
+  const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=59.3&longitude=18.4&current_weather=true");
+  const d = await r.json();
+  document.getElementById("weather").innerHTML = `<h1>${Math.round(d.current_weather.temperature)}°</h1>`;
 }
+weather();
 
-setImage(0);
-setInterval(changeImage, 600000); // 10 min
+/* QR */
+QRCode.toCanvas(document.getElementById("qr"), window.location.href);
 
-/* =====================
-   CLOCK / DATE
-===================== */
-
-function updateClock() {
-  const now = new Date();
-
-  document.getElementById("time").textContent =
-    now.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
-
-  document.getElementById("date").textContent =
-    now.toLocaleDateString("sv-SE", {
-      weekday: "long",
-      day: "numeric",
-      month: "long"
-    });
-}
-
-setInterval(updateClock, 1000);
-updateClock();
+/* AUTO REFRESH */
+setInterval(()=>location.reload(),180000);
