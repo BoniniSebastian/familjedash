@@ -13,12 +13,12 @@ import {
 
 // 🔑 KLISTRA IN DIN CONFIG HÄR
 const firebaseConfig = {
-  apiKey: "DIN_API_KEY",
-  authDomain: "DIN_AUTH_DOMAIN",
-  projectId: "DIN_PROJECT_ID",
-  storageBucket: "DIN_BUCKET",
-  messagingSenderId: "DIN_SENDER_ID",
-  appId: "DIN_APP_ID"
+    apiKey: "AIzaSyBDf7wFAybRoUoofVXr-4vJMFXwfmATn8k",
+    authDomain: "familydash-9d0dd.firebaseapp.com",
+    projectId: "familydash-9d0dd",
+    storageBucket: "familydash-9d0dd.firebasestorage.app",
+    messagingSenderId: "1087350004176",
+    appId: "1:1087350004176:web:8660e048082b2db0f781d5"
 };
 
 const app = initializeApp(firebaseConfig);
