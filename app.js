@@ -130,7 +130,9 @@ window.addItem=async ()=>{
 };
 
 /* QR */
-QRCode.toCanvas(document.getElementById("qr"),window.location.href);
+QRCode.toCanvas(document.getElementById("qr"), window.location.href, {
+  width: 20
+});
 
 /* AUTO REFRESH */
 setInterval(()=>{
