@@ -12,7 +12,6 @@ body {
   overflow:hidden;
 }
 
-/* IMAGE */
 #image-bg {
   position:absolute;
   width:100%;
@@ -24,7 +23,6 @@ body {
   z-index:-2;
 }
 
-/* GRADIENT BOTTOM (fixar övergång) */
 .hero::after {
   content:"";
   position:absolute;
@@ -69,7 +67,7 @@ body {
   opacity:0.8;
 }
 
-/* QR (70% mindre) */
+/* QR */
 #qr {
   width:20px;
   height:20px;
@@ -95,7 +93,7 @@ body {
   cursor:pointer;
 }
 
-/* ROSA – FIXAD */
+/* ROSA */
 .pink {
   background: linear-gradient(135deg, #ff4d8d, #c92a6a);
 }
@@ -113,7 +111,7 @@ li {
 
 #komihag-list li::before,
 #attgora-list li::before {
-  content: "";
+  content:"";
   display:inline-block;
   width:6px;
   height:6px;
@@ -127,6 +125,32 @@ li {
 
 #attgora-list li::before {
   background:#ff8c42;
+}
+
+/* WEATHER */
+.weather-box {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+#weather-icon {
+  font-size:28px;
+}
+
+#weather-main {
+  font-size:32px;
+  font-weight:bold;
+}
+
+#weather-feels {
+  font-size:14px;
+  opacity:0.7;
+}
+
+#forecast {
+  margin-top:8px;
+  font-size:13px;
 }
 
 /* CALENDAR */
@@ -175,7 +199,6 @@ li {
   cursor:pointer;
 }
 
-/* INPUT */
 .input-row {
   display:flex;
   gap:10px;
