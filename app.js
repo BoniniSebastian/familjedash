@@ -11,7 +11,6 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyBDf7wFAybRoUoofVXr-4vJMFXwfmATn8k",
   authDomain: "familydash-9d0dd.firebaseapp.com",
@@ -28,16 +27,24 @@ setInterval(()=>{
   date.textContent=n.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
 },1000);
 
-/* IMAGE ROTATION */
-const imgs=["assets/foton/1.jpg","assets/foton/2.jpg","assets/foton/3.jpg"];
+/* IMAGE */
+const imgs=[
+"assets/foton/1.jpg",
+"assets/foton/2.jpg",
+"assets/foton/3.jpg"
+];
+
 let i=0;
 const bg=document.getElementById("image-bg");
-setInterval(()=>{
+
+function rotate(){
   bg.style.backgroundImage=`url(${imgs[i]})`;
   i=(i+1)%imgs.length;
-},8000);
+}
+rotate();
+setInterval(rotate,8000);
 
-/* LIST */
+/* LISTS */
 function bind(col,id){
   const q=query(collection(db,col),orderBy("createdAt","asc"));
   onSnapshot(q,snap=>{
@@ -57,6 +64,7 @@ bind("attGora","attgora-list");
 
 /* POPUP */
 let current="";
+
 window.openPopup=(type)=>{
   current=type;
   popup.classList.remove("hidden");
@@ -65,6 +73,7 @@ window.openPopup=(type)=>{
   const list=popup-list;
 
   const q=query(collection(db,type),orderBy("createdAt","asc"));
+
   onSnapshot(q,snap=>{
     list.innerHTML="";
     snap.forEach(d=>{
@@ -93,15 +102,14 @@ window.closePopup=()=>popup.classList.add("hidden");
 
 window.addItem=async ()=>{
   if(!popup-input.value) return;
+
   await addDoc(collection(db,current),{
     text:popup-input.value,
     createdAt:Date.now()
   });
+
   popup-input.value="";
 };
 
 /* QR */
 QRCode.toCanvas(document.getElementById("qr"),location.href);
-
-/* AUTO REFRESH */
-setInterval(()=>location.reload(),180000);
