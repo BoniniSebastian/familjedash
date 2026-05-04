@@ -1,191 +1,178 @@
-:root {
-  --bg: #071a26;
-  --card: rgba(255,255,255,0.04);
-  --text: #e9f2f7;
-  --muted: rgba(255,255,255,0.6);
-  --accent: #00bcd4;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  limit,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* =====================
+   FIREBASE
+===================== */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBDf7wFAybRoUoofVXr-4vJMFXwfmATn8k",
+  authDomain: "familydash-9d0dd.firebaseapp.com",
+  projectId: "familydash-9d0dd",
+  storageBucket: "familydash-9d0dd.firebasestorage.app",
+  messagingSenderId: "1087350004176",
+  appId: "1:1087350004176:web:8660e048082b2db0f781d5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* =====================
+   GENERIC LIST LOGIC
+===================== */
+
+function bindList({ colName, listId, moreId }) {
+  const ref = collection(db, colName);
+  const q = query(ref, orderBy("createdAt", "desc"));
+
+  onSnapshot(q, (snap) => {
+    const listEl = document.getElementById(listId);
+    const moreEl = document.getElementById(moreId);
+
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+
+    // visa max 8
+    const visible = items.slice(0, 8);
+    const hiddenCount = Math.max(items.length - 8, 0);
+
+    listEl.innerHTML = "";
+    visible.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item.text;
+      listEl.appendChild(li);
+    });
+
+    moreEl.textContent = hiddenCount > 0 ? `+${hiddenCount} fler` : "";
+  });
 }
 
-* { box-sizing: border-box; }
+/* Bind dashboard lists */
+bindList({ colName: "komIhag", listId: "komihag-list", moreId: "komihag-more" });
+bindList({ colName: "attGora", listId: "attgora-list", moreId: "attgora-more" });
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+/* =====================
+   POPUP
+===================== */
+
+let currentType = null;
+let unsubscribePopup = null;
+
+window.openPopup = (type) => {
+  currentType = type;
+
+  document.getElementById("popup").classList.remove("hidden");
+  document.getElementById("popup-title").textContent =
+    type === "komihag" ? "Kom ihåg" : "Att göra";
+
+  const listEl = document.getElementById("popup-list");
+  listEl.innerHTML = "";
+
+  const colName = type === "komihag" ? "komIhag" : "attGora";
+  const ref = collection(db, colName);
+  const q = query(ref, orderBy("createdAt", "desc"));
+
+  if (unsubscribePopup) unsubscribePopup();
+
+  unsubscribePopup = onSnapshot(q, (snap) => {
+    listEl.innerHTML = "";
+
+    snap.forEach((docSnap) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <span>${docSnap.data().text}</span>
+        <span style="opacity:.6">Ta bort</span>
+      `;
+
+      li.onclick = () => deleteDoc(doc(db, colName, docSnap.id));
+
+      listEl.appendChild(li);
+    });
+  });
+
+  // fokus direkt
+  setTimeout(() => {
+    document.getElementById("popup-input").focus();
+  }, 50);
+};
+
+window.closePopup = () => {
+  document.getElementById("popup").classList.add("hidden");
+};
+
+window.addItem = async () => {
+  const input = document.getElementById("popup-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  const colName = currentType === "komihag" ? "komIhag" : "attGora";
+  const ref = collection(db, colName);
+
+  await addDoc(ref, {
+    text,
+    createdAt: Date.now()
+  });
+
+  input.value = "";
+  input.focus();
+};
+
+/* =====================
+   IMAGE FEED
+===================== */
+
+const images = [
+  "assets/foton/img1.jpg",
+  "assets/foton/img2.jpg",
+  "assets/foton/img3.jpg"
+];
+
+let current = 0;
+const section = document.getElementById("image-section");
+
+function setImage(idx) {
+  section.style.backgroundImage = `url(${images[idx]})`;
 }
 
-/* HEADER */
-.header {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  padding: 18px 20px 8px;
+function changeImage() {
+  section.style.opacity = 0;
+  setTimeout(() => {
+    current = (current + 1) % images.length;
+    setImage(current);
+    section.style.opacity = 1;
+  }, 500);
 }
 
-.time {
-  font-size: 56px;
-  font-weight: 700;
-  letter-spacing: 1px;
+setImage(0);
+setInterval(changeImage, 600000); // 10 min
+
+/* =====================
+   CLOCK / DATE
+===================== */
+
+function updateClock() {
+  const now = new Date();
+
+  document.getElementById("time").textContent =
+    now.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+
+  document.getElementById("date").textContent =
+    now.toLocaleDateString("sv-SE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    });
 }
 
-.date {
-  font-size: 18px;
-  color: var(--muted);
-}
-
-.weather {
-  margin-left: auto;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-/* GRID */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: 210px;
-  gap: 12px;
-  padding: 16px 20px 20px;
-}
-
-.box {
-  background: var(--card);
-  border-radius: 8px;
-  padding: 16px 16px 12px;
-  cursor: pointer;
-  overflow: hidden;
-  position: relative;
-}
-
-.box-title {
-  font-size: 16px;
-  margin-bottom: 10px;
-  color: var(--muted);
-}
-
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.list li {
-  margin: 6px 0;
-  font-size: 15px;
-  line-height: 1.25;
-}
-
-.list li::before {
-  content: "•";
-  margin-right: 8px;
-  color: var(--accent);
-}
-
-.more {
-  position: absolute;
-  bottom: 10px;
-  right: 12px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-/* IMAGE SECTION (feature band) */
-#image-section {
-  width: 100%;
-  height: 160px;              /* justera 140–180 efter smak */
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  transition: opacity 0.8s ease;
-}
-
-#image-section::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.55),
-    rgba(0,0,0,0.15)
-  );
-}
-
-/* CALENDAR */
-.calendar {
-  width: 100%;
-  height: 300px;
-  border: none;
-}
-
-/* POPUP */
-.popup {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.hidden { display: none; }
-
-.popup-content {
-  width: 420px;
-  max-width: 90vw;
-  background: #0d2533;
-  border-radius: 10px;
-  padding: 16px;
-}
-
-.popup-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.close {
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.popup-list {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0;
-  max-height: 300px;
-  overflow: auto;
-}
-
-.popup-list li {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  cursor: pointer;
-}
-
-.popup-input-row {
-  display: flex;
-  gap: 8px;
-}
-
-.popup-input-row input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  outline: none;
-}
-
-.popup-input-row button {
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
+setInterval(updateClock, 1000);
+updateClock();
