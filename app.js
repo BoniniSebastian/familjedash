@@ -1,79 +1,121 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, collection, onSnapshot, query, orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* FIREBASE */
-const firebaseConfig = {
-  apiKey: "AIzaSyBDf7wFAybRoUoofVXr-4vJMFXwfmATn8k",
-  authDomain: "familydash-9d0dd.firebaseapp.com",
-  projectId: "familydash-9d0dd"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* CLOCK */
-setInterval(()=>{
-  const n=new Date();
-  document.getElementById("time").textContent =
-    n.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
-  document.getElementById("date").textContent =
-    n.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
-},1000);
-
-/* LISTS */
-function bind(name,id){
-  const q=query(collection(db,name),orderBy("createdAt","asc"));
-  onSnapshot(q,snap=>{
-    const el=document.getElementById(id);
-    el.innerHTML="";
-    snap.forEach(d=>{
-      const li=document.createElement("li");
-      li.textContent=d.data().text;
-      el.appendChild(li);
-    });
-  });
+body {
+  margin:0;
+  font-family:Arial;
+  background:#071a26;
+  color:white;
 }
 
-bind("komIhag","komihag-list");
-bind("attGora","attgora-list");
-bind("rutiner","rutiner-list");
-
-/* IMAGE FIX */
-const imgs=[
-"assets/foton/1.jpg",
-"assets/foton/2.jpg",
-"assets/foton/3.jpg",
-"assets/foton/4.jpg",
-"assets/foton/5.jpg"
-];
-
-let i=0;
-const imgEl=document.getElementById("image-section");
-
-function setImg(){
-  imgEl.style.backgroundImage=`url(${imgs[i]})`;
+/* BLOBB */
+.blob {
+  position:fixed;
+  width:800px;
+  height:800px;
+  background: radial-gradient(circle, rgba(0,200,255,0.35), transparent);
+  top:-200px;
+  right:-200px;
+  filter: blur(140px);
 }
-setImg();
 
-setInterval(()=>{
-  i=(i+1)%imgs.length;
-  setImg();
-},600000);
-
-/* WEATHER FIX */
-async function weather(){
-  const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=59.3&longitude=18.4&current_weather=true");
-  const d=await r.json();
-
-  document.getElementById("weather-main").innerText =
-    Math.round(d.current_weather.temperature)+"°";
+/* HEADER */
+.header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px;
 }
-weather();
 
-/* QR */
-QRCode.toCanvas(document.getElementById("qr"), window.location.href);
+#time {
+  font-size:60px;
+  font-weight:bold;
+}
 
-/* AUTO REFRESH */
-setInterval(()=>location.reload(),180000);
+#qr {
+  width:80px;
+  height:80px;
+}
+
+/* GRID */
+.grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  padding:20px;
+}
+
+.box {
+  background: rgba(255,255,255,0.06);
+  padding:20px;
+  border-radius:12px;
+  min-height:150px;
+  cursor:pointer;
+}
+
+.pink {
+  background: rgba(255,0,120,0.25);
+}
+
+ul {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+li {
+  margin:6px 0;
+}
+
+/* WEATHER */
+#weather-main {
+  font-size:40px;
+  font-weight:bold;
+}
+
+#forecast {
+  font-size:14px;
+  opacity:0.7;
+}
+
+/* IMAGE */
+#image-section {
+  height:160px;
+  background-size:cover;
+  background-position:center;
+}
+
+/* CALENDAR */
+.calendar-wrapper {
+  margin-top:40px;
+}
+
+.calendar {
+  width:100%;
+  height:320px;
+  border:none;
+}
+
+/* POPUP */
+.popup {
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,0.8);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.hidden {
+  display:none;
+}
+
+.popup-content {
+  background:#0d2533;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+}
+
+.popup-content input {
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+}
