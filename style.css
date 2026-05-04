@@ -112,11 +112,15 @@ li {
 }
 
 #komihag-list li::before {
+  content: "•";
   color:#00cfff;
+  margin-right:8px;
 }
 
 #attgora-list li::before {
+  content: "•";
   color:#ff8c42;
+  margin-right:8px;
 }
 
 /* CALENDAR */
