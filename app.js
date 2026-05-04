@@ -78,7 +78,7 @@ window.openPopup=(type)=>{
   current=type;
 
   document.getElementById("popup").classList.remove("hidden");
-  document.getElementById("popup-title").textContent=type;
+  
 
   const list=document.getElementById("popup-list");
 
