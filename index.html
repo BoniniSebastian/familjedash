@@ -1,25 +1,24 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Family Dashboard</title>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <div class="blob"></div>
 
 <div class="header">
-  <div class="time" id="time"></div>
-  <div class="date" id="date"></div>
+  <div id="time"></div>
+  <div id="date"></div>
 </div>
 
 <div class="grid">
 
   <div class="box weather-box">
-    <div id="weather"></div>
+    <div id="weather-main"></div>
     <div id="forecast"></div>
   </div>
 
@@ -41,9 +40,8 @@
 
 <canvas id="qr"></canvas>
 
-<iframe
-  class="calendar"
-  src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
+<iframe class="calendar"
+src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
 </iframe>
 
 <!-- POPUP -->
@@ -52,14 +50,12 @@
     <h3 id="popup-title"></h3>
     <ul id="popup-list"></ul>
 
-    <input id="popup-input" placeholder="Skriv..." />
+    <input id="popup-input" placeholder="Skriv...">
     <button onclick="addItem()">+</button>
-
     <button onclick="closePopup()">Stäng</button>
   </div>
 </div>
 
 <script type="module" src="app.js"></script>
-
 </body>
 </html>
