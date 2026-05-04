@@ -1,14 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  deleteDoc,
-  doc,
-  updateDoc
+  getFirestore, collection, addDoc, onSnapshot,
+  query, orderBy, deleteDoc, doc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js";
@@ -27,33 +20,31 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* CLOCK */
-setInterval(() => {
-  const now = new Date();
-  document.getElementById("time").textContent =
-    now.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
-  document.getElementById("date").textContent =
-    now.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
+setInterval(()=>{
+  const n=new Date();
+  time.textContent=n.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
+  date.textContent=n.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
 },1000);
 
-/* LISTS */
-function bind(colName, id) {
-  const q = query(collection(db, colName), orderBy("createdAt","desc"));
-  onSnapshot(q, snap => {
-    const el = document.getElementById(id);
-    el.innerHTML = "";
-    snap.forEach(d => {
-      const li = document.createElement("li");
-      li.textContent = d.data().text;
+/* LIST */
+function bind(name,id){
+  const q=query(collection(db,name),orderBy("createdAt","asc"));
+  onSnapshot(q,s=>{
+    const el=document.getElementById(id);
+    el.innerHTML="";
+    s.forEach(d=>{
+      const li=document.createElement("li");
 
-      li.onclick = async () => {
-        const newText = prompt("Ändra:", d.data().text);
-        if(newText) {
-          await updateDoc(doc(db,colName,d.id), { text:newText });
-        }
+      const input=document.createElement("input");
+      input.value=d.data().text;
+
+      input.onchange=()=>{
+        updateDoc(doc(db,name,d.id),{text:input.value});
       };
 
-      li.ondblclick = () => deleteDoc(doc(db,colName,d.id));
+      li.ondblclick=()=>deleteDoc(doc(db,name,d.id));
 
+      li.appendChild(input);
       el.appendChild(li);
     });
   });
@@ -64,63 +55,52 @@ bind("attGora","attgora-list");
 bind("rutiner","rutiner-list");
 
 /* POPUP */
-let current = "";
-
-window.openPopup = (type) => {
-  current = type;
-  document.getElementById("popup").classList.remove("hidden");
-  document.getElementById("popup-title").textContent = type;
+let current="";
+window.openPopup=(t)=>{
+  current=t;
+  popup.classList.remove("hidden");
 };
+window.closePopup=()=>popup.classList.add("hidden");
 
-window.closePopup = () => {
-  document.getElementById("popup").classList.add("hidden");
-};
-
-window.addItem = async () => {
-  const input = document.getElementById("popup-input");
-  if(!input.value) return;
-
-  await addDoc(collection(db,current), {
-    text: input.value,
-    createdAt: Date.now()
+window.addItem=async()=>{
+  const val=popup-input.value;
+  if(!val) return;
+  await addDoc(collection(db,current),{
+    text:val,
+    createdAt:Date.now()
   });
-
-  input.value = "";
+  popup-input.value="";
 };
 
 /* IMAGE */
-const imgs = [
-  "assets/foton/1.jpg",
-  "assets/foton/2.jpg",
-  "assets/foton/3.jpg",
-  "assets/foton/4.jpg",
-  "assets/foton/5.jpg"
+const imgs=[
+"assets/foton/1.jpg",
+"assets/foton/2.jpg",
+"assets/foton/3.jpg",
+"assets/foton/4.jpg",
+"assets/foton/5.jpg"
 ];
-
-let i = 0;
-const sec = document.getElementById("image-section");
-
-function change() {
-  sec.style.opacity = 0;
-  setTimeout(()=>{
-    i=(i+1)%imgs.length;
-    sec.style.backgroundImage=`url(${imgs[i]})`;
-    sec.style.opacity=1;
-  },300);
-}
+let i=0;
+const sec=document.getElementById("image-section");
 sec.style.backgroundImage=`url(${imgs[0]})`;
-setInterval(change,600000);
+
+setInterval(()=>{
+  i=(i+1)%imgs.length;
+  sec.style.backgroundImage=`url(${imgs[i]})`;
+},600000);
 
 /* WEATHER */
-async function weather() {
-  const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=59.3&longitude=18.4&current_weather=true");
-  const d = await r.json();
-  document.getElementById("weather").innerHTML = `<h1>${Math.round(d.current_weather.temperature)}°</h1>`;
+async function weather(){
+  const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=59.3&longitude=18.4&current_weather=true&daily=temperature_2m_max,temperature_2m_min");
+  const d=await r.json();
+
+  weather-main.innerHTML=`${Math.round(d.current_weather.temperature)}° ☀️`;
+  forecast.innerHTML=`${Math.round(d.daily.temperature_2m_max[0])}° / ${Math.round(d.daily.temperature_2m_min[0])}°`;
 }
 weather();
 
 /* QR */
-QRCode.toCanvas(document.getElementById("qr"), window.location.href);
+QRCode.toCanvas(document.getElementById("qr"),location.href);
 
 /* AUTO REFRESH */
 setInterval(()=>location.reload(),180000);
