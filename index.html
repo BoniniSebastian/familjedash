@@ -6,12 +6,12 @@
 <title>Family Dashboard</title>
 
 <link rel="stylesheet" href="style.css">
-
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-</head>
 
+</head>
 <body>
 
+<div id="image-bg"></div>
 <div class="blob"></div>
 
 <div class="header">
@@ -24,31 +24,23 @@
 
 <div class="grid">
 
-  <!-- VÄDER -->
-  <div class="box" id="weather-box">
-    <div id="weather-main"></div>
-    <div id="weather-feels"></div>
-    <div id="forecast"></div>
-  </div>
-
-  <!-- KOM IHÅG -->
-  <div class="box pink" onclick="openPopup('komIhag')">
+  <div class="box" onclick="openPopup('komIhag')">
     <ul id="komihag-list"></ul>
   </div>
 
-  <!-- RUTINER -->
-  <div class="box" onclick="openPopup('rutiner')">
+  <div class="box pink" onclick="openPopup('rutiner')">
     <ul id="rutiner-list"></ul>
   </div>
 
-  <!-- ATT GÖRA -->
   <div class="box" onclick="openPopup('attGora')">
     <ul id="attgora-list"></ul>
   </div>
 
-</div>
+  <div class="box" onclick="openPopup('extra')">
+    <ul id="extra-list"></ul>
+  </div>
 
-<div id="image-section"></div>
+</div>
 
 <div class="calendar-wrapper">
   <iframe class="calendar"
@@ -58,18 +50,20 @@
 
 <!-- POPUP -->
 <div id="popup" class="popup hidden">
-  <div class="popup-content">
+  <div class="popup-card">
     <h3 id="popup-title"></h3>
 
     <ul id="popup-list"></ul>
 
-    <input id="popup-input" placeholder="Skriv..." />
-    <button onclick="addItem()">Lägg till</button>
-    <button onclick="closePopup()">Stäng</button>
+    <div class="input-row">
+      <input id="popup-input" placeholder="Lägg till..." />
+      <button onclick="addItem()">＋</button>
+    </div>
+
+    <button class="close" onclick="closePopup()">Stäng</button>
   </div>
 </div>
 
 <script type="module" src="app.js"></script>
-
 </body>
 </html>
