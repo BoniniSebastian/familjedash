@@ -22,18 +22,28 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* CLOCK */
-setInterval(()=>{
-  const n=new Date();
+function updateClock(){
+  const n = new Date();
 
   document.getElementById("time").textContent =
-    n.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
+    n.toLocaleTimeString("sv-SE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
 
   document.getElementById("date").textContent =
-    n.toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
-},1000);
+    n.toLocaleDateString("sv-SE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    });
+}
+
+updateClock();
+setInterval(updateClock, 1000);
 
 /* IMAGE */
-const imgs=[
+const imgs = [
   "assets/foton/1.jpg",
   "assets/foton/2.jpg",
   "assets/foton/3.jpg",
@@ -41,91 +51,95 @@ const imgs=[
   "assets/foton/5.jpg"
 ];
 
-let i=0;
-const bg=document.getElementById("image-bg");
+let i = 0;
+const bg = document.getElementById("image-bg");
 
 function rotate(){
-  bg.style.backgroundImage=`url(${imgs[i]})`;
-  i=(i+1)%imgs.length;
+  bg.style.backgroundImage = `url(${imgs[i]})`;
+  i = (i + 1) % imgs.length;
 }
+
 rotate();
-setInterval(rotate,8000);
+setInterval(rotate, 8000);
 
 /* LISTS */
-function bind(col,id){
-  const q=query(collection(db,col),orderBy("createdAt","asc"));
+function bind(col, id){
+  const q = query(collection(db, col), orderBy("createdAt", "asc"));
 
-  onSnapshot(q,snap=>{
-    const el=document.getElementById(id);
-    el.innerHTML="";
+  onSnapshot(q, snap => {
+    const el = document.getElementById(id);
+    el.innerHTML = "";
 
-    snap.forEach(d=>{
-      const li=document.createElement("li");
-      li.textContent=d.data().text;
+    snap.forEach(d => {
+      const li = document.createElement("li");
+      li.textContent = d.data().text;
       el.appendChild(li);
     });
   });
 }
 
-bind("komIhag","komihag-list");
-bind("rutiner","rutiner-list");
-bind("attGora","attgora-list");
+bind("komIhag", "komihag-list");
+bind("attGora", "attgora-list");
 
 /* POPUP */
-let current="";
+let current = "";
+let unsubscribePopup = null;
 
-window.openPopup=(type)=>{
-  current=type;
+window.openPopup = (type) => {
+  current = type;
 
   document.getElementById("popup").classList.remove("hidden");
 
-  const list=document.getElementById("popup-list");
+  const list = document.getElementById("popup-list");
 
-  const q=query(collection(db,type),orderBy("createdAt","asc"));
+  if (unsubscribePopup) {
+    unsubscribePopup();
+  }
 
-  onSnapshot(q,snap=>{
-    list.innerHTML="";
+  const q = query(collection(db, type), orderBy("createdAt", "asc"));
 
-    snap.forEach(d=>{
-      const li=document.createElement("li");
+  unsubscribePopup = onSnapshot(q, snap => {
+    list.innerHTML = "";
 
-      const span=document.createElement("span");
-      span.textContent=d.data().text;
+    snap.forEach(d => {
+      const li = document.createElement("li");
 
-      span.onclick=async ()=>{
-        const val=prompt("Ändra",d.data().text);
-        if(val){
-          await updateDoc(doc(db,type,d.id),{text:val});
+      const span = document.createElement("span");
+      span.textContent = d.data().text;
+
+      span.onclick = async () => {
+        const val = prompt("Ändra", d.data().text);
+        if (val) {
+          await updateDoc(doc(db, type, d.id), { text: val });
         }
       };
 
-      const del=document.createElement("button");
-      del.textContent="✕";
-      del.onclick=()=>deleteDoc(doc(db,type,d.id));
+      const del = document.createElement("button");
+      del.textContent = "✕";
+      del.onclick = () => deleteDoc(doc(db, type, d.id));
 
       li.appendChild(span);
       li.appendChild(del);
-
       list.appendChild(li);
     });
   });
 };
 
-window.closePopup=()=>{
+window.closePopup = () => {
   document.getElementById("popup").classList.add("hidden");
 };
 
-window.addItem=async ()=>{
-  const input=document.getElementById("popup-input");
+window.addItem = async () => {
+  const input = document.getElementById("popup-input");
 
-  if(!input.value) return;
+  if (!input.value.trim()) return;
 
-  await addDoc(collection(db,current),{
-    text:input.value,
-    createdAt:Date.now()
+  await addDoc(collection(db, current), {
+    text: input.value.trim(),
+    createdAt: Date.now()
   });
 
-  input.value="";
+  input.value = "";
 };
 
 /* WEATHER */
@@ -140,27 +154,22 @@ async function loadWeather(){
   const max = Math.round(data.daily.temperature_2m_max[0]);
   const min = Math.round(data.daily.temperature_2m_min[0]);
 
-  let icon="☀️";
-  const code=data.current_weather.weathercode;
+  let icon = "☀️";
+  const code = data.current_weather.weathercode;
 
-  if(code>2 && code<50) icon="☁️";
-  if(code>=50 && code<70) icon="🌧️";
-  if(code>=70) icon="❄️";
+  if (code > 2 && code < 50) icon = "☁️";
+  if (code >= 50 && code < 70) icon = "🌧️";
+  if (code >= 70) icon = "❄️";
 
-  document.getElementById("weather-icon").textContent=icon;
-  document.getElementById("weather-main").textContent=temp+"°";
-  document.getElementById("weather-feels").textContent="Känns som "+temp+"°";
-  document.getElementById("forecast").textContent="Max "+max+"° / Min "+min+"°";
+  document.getElementById("weather-icon").textContent = icon;
+  document.getElementById("weather-main").textContent = temp + "°";
+  document.getElementById("weather-feels").textContent = "Känns som " + temp + "°";
+  document.getElementById("forecast").textContent = "Max " + max + "° / Min " + min + "°";
 }
 
 loadWeather();
 
-/* QR */
-QRCode.toCanvas(document.getElementById("qr"), window.location.href, {
-  width:20
-});
-
 /* AUTO REFRESH */
-setInterval(()=>{
+setInterval(() => {
   location.reload();
-},180000);
+}, 180000);
