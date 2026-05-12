@@ -3,10 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Family Dashboard</title>
-
+<title>Min Dashboard</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
 
 <body>
@@ -16,45 +14,41 @@
   <div class="blob"></div>
 
   <div class="header">
-    <div>
+    <div class="header-left">
       <div id="time"></div>
       <div id="date"></div>
     </div>
-    <canvas id="qr"></canvas>
+
+    <div class="weather-top">
+      <div id="weather-icon"></div>
+      <div>
+        <div id="weather-main"></div>
+        <div id="weather-feels"></div>
+        <div id="forecast"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="content">
 
-  <div class="grid">
+  <div class="main-column">
 
     <div class="box" onclick="openPopup('komIhag')">
       <ul id="komihag-list"></ul>
-    </div>
-
-    <div class="box pink" onclick="openPopup('rutiner')">
-      <ul id="rutiner-list"></ul>
     </div>
 
     <div class="box" onclick="openPopup('attGora')">
       <ul id="attgora-list"></ul>
     </div>
 
-    <!-- WEATHER -->
-    <div class="box weather-box">
-      <div id="weather-icon"></div>
-      <div id="weather-main"></div>
-      <div id="weather-feels"></div>
-      <div id="forecast"></div>
+    <div class="calendar-wrapper">
+      <iframe
+        class="calendar"
+        src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
+      </iframe>
     </div>
 
-  </div>
-
-  <div class="calendar-wrapper">
-    <iframe
-      class="calendar"
-      src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
-    </iframe>
   </div>
 
 </div>
