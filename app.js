@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -8,10 +9,13 @@ import {
   orderBy,
   deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* FIREBASE */
+
 const firebaseConfig = {
   apiKey: "AIzaSyBDf7wFAybRoUoofVXr-4vJMFXwfmATn8k",
   authDomain: "familydash-9d0dd.firebaseapp.com",
@@ -22,7 +26,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* CLOCK */
+
 function updateClock(){
+
   const n = new Date();
 
   document.getElementById("time").textContent =
@@ -40,9 +46,11 @@ function updateClock(){
 }
 
 updateClock();
+
 setInterval(updateClock, 1000);
 
-/* IMAGE */
+/* IMAGE ROTATION */
+
 const imgs = [
   "assets/foton/1.jpg",
   "assets/foton/2.jpg",
@@ -52,27 +60,45 @@ const imgs = [
 ];
 
 let i = 0;
+
 const bg = document.getElementById("image-bg");
 
 function rotate(){
+
   bg.style.backgroundImage = `url(${imgs[i]})`;
+
   i = (i + 1) % imgs.length;
 }
 
 rotate();
+
 setInterval(rotate, 8000);
 
-/* LISTS */
+/* CARD PREVIEWS */
+
 function bind(col, id){
-  const q = query(collection(db, col), orderBy("createdAt", "asc"));
+
+  const q = query(
+    collection(db, col),
+    orderBy("createdAt", "asc")
+  );
 
   onSnapshot(q, snap => {
+
     const el = document.getElementById(id);
+
     el.innerHTML = "";
 
     snap.forEach(d => {
+
+      const data = d.data();
+
+      if(data.done) return;
+
       const li = document.createElement("li");
-      li.textContent = d.data().text;
+
+      li.textContent = data.text;
+
       el.appendChild(li);
     });
   });
@@ -82,94 +108,303 @@ bind("komIhag", "komihag-list");
 bind("attGora", "attgora-list");
 
 /* POPUP */
+
 let current = "";
+
 let unsubscribePopup = null;
 
-window.openPopup = (type) => {
+window.openPopup = (type, title) => {
+
   current = type;
 
-  document.getElementById("popup").classList.remove("hidden");
+  document.getElementById("popup-title").textContent = title;
 
-  const list = document.getElementById("popup-list");
+  document.getElementById("popup")
+    .classList.remove("hidden");
 
-  if (unsubscribePopup) {
+  const activeList =
+    document.getElementById("popup-list");
+
+  const doneList =
+    document.getElementById("popup-done-list");
+
+  const input =
+    document.getElementById("popup-input");
+
+  input.value = "";
+
+  setTimeout(() => {
+    input.focus();
+  }, 100);
+
+  if(unsubscribePopup){
     unsubscribePopup();
   }
 
-  const q = query(collection(db, type), orderBy("createdAt", "asc"));
+  const q = query(
+    collection(db, type),
+    orderBy("createdAt", "asc")
+  );
 
   unsubscribePopup = onSnapshot(q, snap => {
-    list.innerHTML = "";
+
+    activeList.innerHTML = "";
+    doneList.innerHTML = "";
 
     snap.forEach(d => {
+
+      const data = d.data();
+
       const li = document.createElement("li");
 
+      const left = document.createElement("div");
+      left.className = "popup-item-left";
+
+      const check = document.createElement("button");
+
+      check.className =
+        data.done ? "check checked" : "check";
+
+      check.textContent =
+        data.done ? "✓" : "";
+
+      check.onclick = async (e) => {
+
+        e.stopPropagation();
+
+        await updateDoc(
+          doc(db, type, d.id),
+          {
+            done: !data.done
+          }
+        );
+      };
+
       const span = document.createElement("span");
-      span.textContent = d.data().text;
+
+      span.textContent = data.text;
 
       span.onclick = async () => {
-        const val = prompt("Ändra", d.data().text);
-        if (val) {
-          await updateDoc(doc(db, type, d.id), { text: val });
+
+        const val = prompt(
+          "Ändra",
+          data.text
+        );
+
+        if(val && val.trim()){
+
+          await updateDoc(
+            doc(db, type, d.id),
+            {
+              text: val.trim()
+            }
+          );
         }
       };
 
-      const del = document.createElement("button");
-      del.textContent = "✕";
-      del.onclick = () => deleteDoc(doc(db, type, d.id));
+      left.appendChild(check);
+      left.appendChild(span);
 
-      li.appendChild(span);
+      const del = document.createElement("button");
+
+      del.className = "delete-btn";
+      del.textContent = "Ta bort";
+
+      del.onclick = () =>
+        deleteDoc(doc(db, type, d.id));
+
+      li.appendChild(left);
       li.appendChild(del);
-      list.appendChild(li);
+
+      if(data.done){
+
+        li.classList.add("done-item");
+
+        doneList.appendChild(li);
+
+      } else {
+
+        activeList.appendChild(li);
+      }
     });
   });
 };
 
 window.closePopup = () => {
-  document.getElementById("popup").classList.add("hidden");
+
+  document.getElementById("popup")
+    .classList.add("hidden");
 };
 
 window.addItem = async () => {
-  const input = document.getElementById("popup-input");
 
-  if (!input.value.trim()) return;
+  const input =
+    document.getElementById("popup-input");
 
-  await addDoc(collection(db, current), {
-    text: input.value.trim(),
-    createdAt: Date.now()
-  });
+  if(!input.value.trim()) return;
+
+  await addDoc(
+    collection(db, current),
+    {
+      text: input.value.trim(),
+      createdAt: Date.now(),
+      done: false
+    }
+  );
 
   input.value = "";
+
+  input.focus();
 };
 
+/* KEYBOARD */
+
+document.addEventListener("keydown", e => {
+
+  const popupOpen =
+    !document.getElementById("popup")
+      .classList.contains("hidden");
+
+  const notesOpen =
+    !document.getElementById("notesPopup")
+      .classList.contains("hidden");
+
+  if(e.key === "Escape"){
+
+    if(popupOpen) closePopup();
+
+    if(notesOpen) closeNotesPopup();
+  }
+
+  if(
+    e.key === "Enter" &&
+    popupOpen &&
+    document.activeElement.id === "popup-input"
+  ){
+
+    e.preventDefault();
+
+    addItem();
+  }
+});
+
+/* NOTES */
+
+const notesRef =
+  doc(db, "snabbanteckningar", "main");
+
+async function loadNote(){
+
+  const snap = await getDoc(notesRef);
+
+  if(snap.exists()){
+
+    const text = snap.data().text || "";
+
+    document.getElementById("notes-preview")
+      .textContent =
+        text.trim()
+          ? text
+          : "Tryck för att skriva.";
+  }
+}
+
+window.openNotesPopup = async () => {
+
+  const snap = await getDoc(notesRef);
+
+  const text =
+    snap.exists()
+      ? snap.data().text || ""
+      : "";
+
+  document.getElementById("notes-input")
+    .value = text;
+
+  document.getElementById("notesPopup")
+    .classList.remove("hidden");
+
+  setTimeout(() => {
+
+    document.getElementById("notes-input")
+      .focus();
+
+  }, 100);
+};
+
+window.closeNotesPopup = () => {
+
+  document.getElementById("notesPopup")
+    .classList.add("hidden");
+};
+
+window.saveNote = async () => {
+
+  const text =
+    document.getElementById("notes-input").value;
+
+  await setDoc(notesRef, {
+    text,
+    updatedAt: Date.now()
+  });
+
+  document.getElementById("notes-preview")
+    .textContent =
+      text.trim()
+        ? text
+        : "Tryck för att skriva.";
+
+  closeNotesPopup();
+};
+
+loadNote();
+
 /* WEATHER */
+
 async function loadWeather(){
+
   const res = await fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=59.3&longitude=18.4&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FStockholm"
   );
 
   const data = await res.json();
 
-  const temp = Math.round(data.current_weather.temperature);
-  const max = Math.round(data.daily.temperature_2m_max[0]);
-  const min = Math.round(data.daily.temperature_2m_min[0]);
+  const temp =
+    Math.round(data.current_weather.temperature);
+
+  const max =
+    Math.round(data.daily.temperature_2m_max[0]);
+
+  const min =
+    Math.round(data.daily.temperature_2m_min[0]);
 
   let icon = "☀️";
-  const code = data.current_weather.weathercode;
 
-  if (code > 2 && code < 50) icon = "☁️";
-  if (code >= 50 && code < 70) icon = "🌧️";
-  if (code >= 70) icon = "❄️";
+  const code =
+    data.current_weather.weathercode;
 
-  document.getElementById("weather-icon").textContent = icon;
-  document.getElementById("weather-main").textContent = temp + "°";
-  document.getElementById("weather-feels").textContent = "Känns som " + temp + "°";
-  document.getElementById("forecast").textContent = "Max " + max + "° / Min " + min + "°";
+  if(code > 2 && code < 50) icon = "☁️";
+  if(code >= 50 && code < 70) icon = "🌧️";
+  if(code >= 70) icon = "❄️";
+
+  document.getElementById("weather-icon")
+    .textContent = icon;
+
+  document.getElementById("weather-main")
+    .textContent = temp + "°";
+
+  document.getElementById("weather-feels")
+    .textContent = "Känns som " + temp + "°";
+
+  document.getElementById("forecast")
+    .textContent =
+      "Max " + max + "° / Min " + min + "°";
 }
 
 loadWeather();
 
 /* AUTO REFRESH */
+
 setInterval(() => {
   location.reload();
 }, 180000);
