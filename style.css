@@ -76,11 +76,7 @@ body{
   left:0;
   width:100%;
   height:90px;
-  background:linear-gradient(
-    to bottom,
-    transparent,
-    #071a26
-  );
+  background:linear-gradient(to bottom, transparent, #071a26);
 }
 
 /* HEADER */
@@ -94,7 +90,7 @@ body{
 .top-center{
   display:flex;
   align-items:flex-start;
-  gap:20px;
+  gap:16px;
 }
 
 #time{
@@ -114,7 +110,7 @@ body{
 .weather-top{
   display:flex;
   align-items:center;
-  gap:9px;
+  gap:8px;
   margin-top:10px;
 }
 
@@ -138,7 +134,7 @@ body{
 /* CONTENT */
 
 .content{
-  padding:0 20px 40px;
+  padding:0 20px 60px;
 }
 
 .main-column{
@@ -152,7 +148,7 @@ body{
 .box{
   position:relative;
   background:rgba(255,255,255,.075);
-  min-height:200px;
+  min-height:280px;
   padding:22px;
   margin-bottom:16px;
   cursor:pointer;
@@ -168,7 +164,7 @@ body{
 }
 
 .notes-box{
-  min-height:165px;
+  min-height:230px;
 }
 
 #notes-preview{
@@ -282,12 +278,15 @@ li{
 }
 
 .popup-card ul li{
+  padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+
+.task-top-row{
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:14px;
-  padding:13px 0;
-  border-bottom:1px solid rgba(255,255,255,.07);
 }
 
 .popup-item-left{
@@ -308,12 +307,15 @@ li{
   border-radius:6px;
   border:1px solid rgba(255,255,255,.55);
   background:transparent;
+  color:#071a26;
   cursor:pointer;
 }
 
 .check.checked{
   background:#00cfff;
   border-color:#00cfff;
+  color:#071a26;
+  font-weight:bold;
 }
 
 .done-item span{
@@ -327,6 +329,73 @@ li{
   color:rgba(255,255,255,.42);
   cursor:pointer;
 }
+
+.delete-btn:hover{
+  color:#ff6b6b;
+}
+
+/* SUBTASKS */
+
+.subtasks{
+  margin-left:31px;
+  margin-top:10px;
+}
+
+.subtask{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin:7px 0;
+  color:rgba(255,255,255,.74);
+  font-size:14px;
+}
+
+.sub-check{
+  width:16px;
+  height:16px;
+  border-radius:5px;
+  border:1px solid rgba(255,255,255,.42);
+  background:transparent;
+  color:#071a26;
+  cursor:pointer;
+  font-size:11px;
+  line-height:1;
+}
+
+.sub-check.checked{
+  background:#00cfff;
+  border-color:#00cfff;
+  color:#071a26;
+  font-weight:bold;
+}
+
+.done-subtask span{
+  opacity:.45;
+  text-decoration:line-through;
+}
+
+.sub-delete{
+  margin-left:auto;
+  background:none;
+  border:none;
+  color:rgba(255,255,255,.35);
+  font-size:18px;
+  cursor:pointer;
+}
+
+.subtask-input{
+  width:100%;
+  margin-top:8px;
+  padding:10px 12px;
+  border:none;
+  outline:none;
+  border-radius:10px;
+  background:rgba(255,255,255,.055);
+  color:white;
+  font-size:14px;
+}
+
+/* INPUT */
 
 .input-row{
   display:flex;
@@ -375,7 +444,6 @@ li{
 }
 
 @media (max-width:900px){
-
   .main-column{
     width:100%;
     min-width:0;
