@@ -4,57 +4,92 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Min Dashboard</title>
-<link rel="stylesheet" href="style.css">
-</head>
 
+<link rel="stylesheet" href="style.css">
+
+</head>
 <body>
 
+<div class="ambient ambient-one"></div>
+<div class="ambient ambient-two"></div>
+
 <div class="hero">
+
   <div id="image-bg"></div>
-  <div class="blob"></div>
 
   <div class="header">
-    <div class="header-left">
-      <div id="time"></div>
-      <div id="date"></div>
+
+    <div class="top-center">
+
+      <div class="clock-block">
+        <div id="time"></div>
+        <div id="date"></div>
+      </div>
+
+      <div class="weather-top">
+        <div id="weather-icon"></div>
+
+        <div>
+          <div id="weather-main"></div>
+          <div id="weather-feels"></div>
+          <div id="forecast"></div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="weather-top">
-      <div id="weather-icon"></div>
-      <div>
-        <div id="weather-main"></div>
-        <div id="weather-feels"></div>
-        <div id="forecast"></div>
-      </div>
-    </div>
   </div>
+
 </div>
 
 <div class="content">
 
   <div class="main-column">
 
-    <div class="box" onclick="openPopup('komIhag')">
+    <div class="box" onclick="openPopup('komIhag','Kom-ihåg')">
+      <div class="card-title">Kom-ihåg</div>
       <ul id="komihag-list"></ul>
     </div>
 
-    <div class="box" onclick="openPopup('attGora')">
+    <div class="box" onclick="openPopup('attGora','Listor')">
+      <div class="card-title">Listor</div>
       <ul id="attgora-list"></ul>
     </div>
 
+    <div class="box notes-box" onclick="openNotesPopup()">
+      <div class="card-title">Snabbanteckningar</div>
+
+      <div id="notes-preview">
+        Tryck för att skriva.
+      </div>
+    </div>
+
     <div class="calendar-wrapper">
+
       <iframe
         class="calendar"
         src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
       </iframe>
+
     </div>
 
   </div>
 
 </div>
 
+<!-- POPUP -->
+
 <div id="popup" class="popup hidden">
+
   <div class="popup-card">
+
+    <button class="popup-x" onclick="closePopup()">×</button>
+
+    <h2 id="popup-title"></h2>
+
+    <div class="popup-section-title">
+      Aktiva
+    </div>
 
     <ul id="popup-list"></ul>
 
@@ -63,8 +98,37 @@
       <button onclick="addItem()">＋</button>
     </div>
 
-    <button class="close" onclick="closePopup()">Stäng</button>
+    <div class="popup-section-title done-title">
+      Slutförda
+    </div>
+
+    <ul id="popup-done-list"></ul>
+
   </div>
+
+</div>
+
+<!-- NOTES POPUP -->
+
+<div id="notesPopup" class="popup hidden">
+
+  <div class="popup-card notes-popup-card">
+
+    <button class="popup-x" onclick="closeNotesPopup()">×</button>
+
+    <h2>Snabbanteckningar</h2>
+
+    <textarea
+      id="notes-input"
+      placeholder="Skriv här..."
+    ></textarea>
+
+    <button class="save-note" onclick="saveNote()">
+      Spara
+    </button>
+
+  </div>
+
 </div>
 
 <script type="module" src="app.js"></script>
