@@ -399,7 +399,7 @@ document.addEventListener("touchstart", e => {
     !document.getElementById("viewLayer").classList.contains("hidden");
 
   touchStartedNearTop =
-    touchStartY < 90 || menuOpen || viewOpen;
+    touchStartY < 180 || menuOpen || viewOpen;
 }, { passive: true });
 
 document.addEventListener("touchend", e => {
