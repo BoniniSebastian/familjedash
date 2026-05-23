@@ -10,6 +10,16 @@ body{
   overflow-x:hidden;
 }
 
+.clock-block{
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease;
+}
+
+.clock-block:active{
+  transform:scale(.97);
+  opacity:.7;
+}
+
 /* BLOBS */
 
 .ambient{
