@@ -384,10 +384,30 @@ window.addMenuListItem = async () => {
 
 let touchStartY = 0;
 let touchStartX = 0;
-let touchStartedNearTop = false;
+let validSwipeStart = false;
+
+function isTypingTarget(el){
+  if(!el) return false;
+
+  const tag = el.tagName ? el.tagName.toLowerCase() : "";
+
+  return (
+    tag === "input" ||
+    tag === "textarea" ||
+    tag === "select" ||
+    el.isContentEditable
+  );
+}
 
 document.addEventListener("touchstart", e => {
   if(!e.touches || !e.touches.length) return;
+
+  const target = e.target;
+
+  if(isTypingTarget(target)){
+    validSwipeStart = false;
+    return;
+  }
 
   touchStartY = e.touches[0].clientY;
   touchStartX = e.touches[0].clientX;
@@ -398,12 +418,28 @@ document.addEventListener("touchstart", e => {
   const viewOpen =
     !document.getElementById("viewLayer").classList.contains("hidden");
 
-  touchStartedNearTop =
-    touchStartY < 220 || menuOpen || viewOpen;
+  const popupOpen =
+    !document.getElementById("popup").classList.contains("hidden");
+
+  const notesOpen =
+    !document.getElementById("notesPopup").classList.contains("hidden");
+
+  const pageIsAtTop =
+    window.scrollY <= 5;
+
+  validSwipeStart =
+    !popupOpen &&
+    !notesOpen &&
+    (
+      menuOpen ||
+      viewOpen ||
+      pageIsAtTop
+    );
+
 }, { passive: true });
 
 document.addEventListener("touchend", e => {
-  if(!touchStartedNearTop) return;
+  if(!validSwipeStart) return;
   if(!e.changedTouches || !e.changedTouches.length) return;
 
   const endY = e.changedTouches[0].clientY;
@@ -412,7 +448,7 @@ document.addEventListener("touchend", e => {
   const diffY = endY - touchStartY;
   const diffX = Math.abs(endX - touchStartX);
 
-  if(diffY < 30 || diffX > 90) return;
+  if(diffY < 48 || diffX > 90) return;
 
   const menuOpen =
     !document.getElementById("menuLayer").classList.contains("hidden");
@@ -431,6 +467,7 @@ document.addEventListener("touchend", e => {
   }
 
   openMenu();
+
 }, { passive: true });
 
 /* KEYBOARD */
