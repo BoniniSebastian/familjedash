@@ -24,20 +24,29 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* CLOCK */
+
 function updateClock(){
   const n = new Date();
 
   document.getElementById("time").textContent =
-    n.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+    n.toLocaleTimeString("sv-SE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
 
   document.getElementById("date").textContent =
-    n.toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" });
+    n.toLocaleDateString("sv-SE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    });
 }
 
 updateClock();
 setInterval(updateClock, 1000);
 
 /* IMAGE ROTATION */
+
 const imgs = [
   "assets/foton/1.jpg",
   "assets/foton/2.jpg",
@@ -58,6 +67,7 @@ rotate();
 setInterval(rotate, 8000);
 
 /* CARD PREVIEWS */
+
 function bind(col, id){
   const q = query(collection(db, col), orderBy("createdAt", "asc"));
 
@@ -79,7 +89,148 @@ function bind(col, id){
 bind("komIhag", "komihag-list");
 bind("attGora", "attgora-list");
 
+/* TASK RENDERER */
+
+function renderTaskItem(type, d){
+  const data = d.data();
+  const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
+
+  const li = document.createElement("li");
+  li.className = "task-item";
+
+  const topRow = document.createElement("div");
+  topRow.className = "task-top-row";
+
+  const left = document.createElement("div");
+  left.className = "popup-item-left";
+
+  const check = document.createElement("button");
+  check.className = data.done ? "check checked" : "check";
+  check.textContent = data.done ? "✓" : "";
+
+  check.onclick = async (e) => {
+    e.stopPropagation();
+    await updateDoc(doc(db, type, d.id), {
+      done: !data.done
+    });
+  };
+
+  const span = document.createElement("span");
+  span.textContent = data.text;
+
+  span.onclick = async () => {
+    const val = prompt("Ändra", data.text);
+
+    if(val && val.trim()){
+      await updateDoc(doc(db, type, d.id), {
+        text: val.trim()
+      });
+    }
+  };
+
+  left.appendChild(check);
+  left.appendChild(span);
+
+  const del = document.createElement("button");
+  del.className = "delete-btn";
+  del.textContent = "Ta bort";
+
+  del.onclick = () => deleteDoc(doc(db, type, d.id));
+
+  topRow.appendChild(left);
+  topRow.appendChild(del);
+
+  li.appendChild(topRow);
+
+  const subWrap = document.createElement("div");
+  subWrap.className = "subtasks";
+
+  subtasks.forEach((sub, index) => {
+    const subRow = document.createElement("div");
+    subRow.className = sub.done ? "subtask done-subtask" : "subtask";
+
+    const subCheck = document.createElement("button");
+    subCheck.className = sub.done ? "sub-check checked" : "sub-check";
+    subCheck.textContent = sub.done ? "✓" : "";
+
+    subCheck.onclick = async (e) => {
+      e.stopPropagation();
+
+      const updated = [...subtasks];
+
+      updated[index] = {
+        ...updated[index],
+        done: !updated[index].done
+      };
+
+      await updateDoc(doc(db, type, d.id), {
+        subtasks: updated
+      });
+    };
+
+    const subText = document.createElement("span");
+    subText.textContent = sub.text;
+
+    const subDelete = document.createElement("button");
+    subDelete.className = "sub-delete";
+    subDelete.textContent = "×";
+
+    subDelete.onclick = async (e) => {
+      e.stopPropagation();
+
+      const updated = subtasks.filter((_, idx) => idx !== index);
+
+      await updateDoc(doc(db, type, d.id), {
+        subtasks: updated
+      });
+    };
+
+    subRow.appendChild(subCheck);
+    subRow.appendChild(subText);
+    subRow.appendChild(subDelete);
+
+    subWrap.appendChild(subRow);
+  });
+
+  const subInput = document.createElement("input");
+  subInput.className = "subtask-input";
+  subInput.placeholder = "Lägg till delmål...";
+
+  subInput.addEventListener("keydown", async (e) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+
+      const value = subInput.value.trim();
+      if(!value) return;
+
+      const updated = [
+        ...subtasks,
+        {
+          text: value,
+          done: false
+        }
+      ];
+
+      await updateDoc(doc(db, type, d.id), {
+        subtasks: updated
+      });
+
+      subInput.value = "";
+    }
+  });
+
+  subWrap.appendChild(subInput);
+  li.appendChild(subWrap);
+
+  if(data.done){
+    li.classList.add("done-item");
+  }
+
+  return li;
+}
+
 /* POPUP */
+
 let current = "";
 let unsubscribePopup = null;
 
@@ -106,125 +257,12 @@ window.openPopup = (type, title) => {
 
     snap.forEach(d => {
       const data = d.data();
-      const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
-
-      const li = document.createElement("li");
-      li.className = "task-item";
-
-      const topRow = document.createElement("div");
-      topRow.className = "task-top-row";
-
-      const left = document.createElement("div");
-      left.className = "popup-item-left";
-
-      const check = document.createElement("button");
-      check.className = data.done ? "check checked" : "check";
-      check.textContent = data.done ? "✓" : "";
-
-      check.onclick = async (e) => {
-        e.stopPropagation();
-        await updateDoc(doc(db, type, d.id), { done: !data.done });
-      };
-
-      const span = document.createElement("span");
-      span.textContent = data.text;
-
-      span.onclick = async () => {
-        const val = prompt("Ändra", data.text);
-        if(val && val.trim()){
-          await updateDoc(doc(db, type, d.id), { text: val.trim() });
-        }
-      };
-
-      left.appendChild(check);
-      left.appendChild(span);
-
-      const del = document.createElement("button");
-      del.className = "delete-btn";
-      del.textContent = "Ta bort";
-      del.onclick = () => deleteDoc(doc(db, type, d.id));
-
-      topRow.appendChild(left);
-      topRow.appendChild(del);
-
-      li.appendChild(topRow);
-
-      const subWrap = document.createElement("div");
-      subWrap.className = "subtasks";
-
-      subtasks.forEach((sub, index) => {
-        const subRow = document.createElement("div");
-        subRow.className = sub.done ? "subtask done-subtask" : "subtask";
-
-        const subCheck = document.createElement("button");
-        subCheck.className = sub.done ? "sub-check checked" : "sub-check";
-        subCheck.textContent = sub.done ? "✓" : "";
-
-        subCheck.onclick = async (e) => {
-          e.stopPropagation();
-
-          const updated = [...subtasks];
-          updated[index] = {
-            ...updated[index],
-            done: !updated[index].done
-          };
-
-          await updateDoc(doc(db, type, d.id), { subtasks: updated });
-        };
-
-        const subText = document.createElement("span");
-        subText.textContent = sub.text;
-
-        const subDelete = document.createElement("button");
-        subDelete.className = "sub-delete";
-        subDelete.textContent = "×";
-
-        subDelete.onclick = async (e) => {
-          e.stopPropagation();
-
-          const updated = subtasks.filter((_, idx) => idx !== index);
-          await updateDoc(doc(db, type, d.id), { subtasks: updated });
-        };
-
-        subRow.appendChild(subCheck);
-        subRow.appendChild(subText);
-        subRow.appendChild(subDelete);
-
-        subWrap.appendChild(subRow);
-      });
-
-      const subInput = document.createElement("input");
-      subInput.className = "subtask-input";
-      subInput.placeholder = "Lägg till delmål...";
-
-      subInput.addEventListener("keydown", async (e) => {
-        if(e.key === "Enter"){
-          e.preventDefault();
-
-          const value = subInput.value.trim();
-          if(!value) return;
-
-          const updated = [
-            ...subtasks,
-            {
-              text: value,
-              done: false
-            }
-          ];
-
-          await updateDoc(doc(db, type, d.id), { subtasks: updated });
-          subInput.value = "";
-        }
-      });
-
-      subWrap.appendChild(subInput);
-      li.appendChild(subWrap);
+      const item = renderTaskItem(type, d);
 
       if(data.done){
-        li.classList.add("done-item");
-        doneList.appendChild(li);
+        doneList.appendChild(item);
       } else {
-        activeList.appendChild(li);
+        activeList.appendChild(item);
       }
     });
   });
@@ -250,7 +288,153 @@ window.addItem = async () => {
   input.focus();
 };
 
+/* MENU SYSTEM */
+
+let activeMenuView = null;
+let unsubscribeMenuList = null;
+
+window.openMenu = () => {
+  document.getElementById("menuLayer").classList.remove("hidden");
+};
+
+window.closeMenu = () => {
+  closeMenuView();
+
+  document.getElementById("menuLayer").classList.add("hidden");
+};
+
+window.openMenuView = (view) => {
+  activeMenuView = view;
+
+  document.getElementById("viewLayer").classList.remove("hidden");
+
+  document.querySelectorAll(".menu-view").forEach(el => {
+    el.classList.add("hidden");
+  });
+
+  if(view === "calendar"){
+    document.getElementById("view-title").textContent = "Meny";
+    document.getElementById("calendarView").classList.remove("hidden");
+  }
+
+  if(view === "lists"){
+    document.getElementById("view-title").textContent = "Meny";
+    document.getElementById("listsView").classList.remove("hidden");
+    bindMenuListView();
+  }
+
+  if(view === "links"){
+    document.getElementById("view-title").textContent = "Meny";
+    document.getElementById("linksView").classList.remove("hidden");
+  }
+};
+
+window.closeMenuView = () => {
+  activeMenuView = null;
+
+  document.getElementById("viewLayer").classList.add("hidden");
+
+  document.querySelectorAll(".menu-view").forEach(el => {
+    el.classList.add("hidden");
+  });
+};
+
+function bindMenuListView(){
+  const activeList = document.getElementById("menu-list-active");
+  const doneList = document.getElementById("menu-list-done");
+
+  if(unsubscribeMenuList) unsubscribeMenuList();
+
+  const q = query(collection(db, "attGora"), orderBy("createdAt", "asc"));
+
+  unsubscribeMenuList = onSnapshot(q, snap => {
+    activeList.innerHTML = "";
+    doneList.innerHTML = "";
+
+    snap.forEach(d => {
+      const data = d.data();
+      const item = renderTaskItem("attGora", d);
+
+      if(data.done){
+        doneList.appendChild(item);
+      } else {
+        activeList.appendChild(item);
+      }
+    });
+  });
+}
+
+window.addMenuListItem = async () => {
+  const input = document.getElementById("menu-list-input");
+
+  if(!input.value.trim()) return;
+
+  await addDoc(collection(db, "attGora"), {
+    text: input.value.trim(),
+    createdAt: Date.now(),
+    done: false,
+    subtasks: []
+  });
+
+  input.value = "";
+  input.focus();
+};
+
+/* SWIPE DOWN GESTURE */
+
+let touchStartY = 0;
+let touchStartX = 0;
+let touchStartedNearTop = false;
+
+document.addEventListener("touchstart", e => {
+  if(!e.touches || !e.touches.length) return;
+
+  touchStartY = e.touches[0].clientY;
+  touchStartX = e.touches[0].clientX;
+
+  const menuOpen =
+    !document.getElementById("menuLayer").classList.contains("hidden");
+
+  const viewOpen =
+    !document.getElementById("viewLayer").classList.contains("hidden");
+
+  touchStartedNearTop =
+    touchStartY < 90 || menuOpen || viewOpen;
+}, { passive: true });
+
+document.addEventListener("touchend", e => {
+  if(!touchStartedNearTop) return;
+  if(!e.changedTouches || !e.changedTouches.length) return;
+
+  const endY = e.changedTouches[0].clientY;
+  const endX = e.changedTouches[0].clientX;
+
+  const diffY = endY - touchStartY;
+  const diffX = Math.abs(endX - touchStartX);
+
+  if(diffY < 80 || diffX > 90) return;
+
+  const menuOpen =
+    !document.getElementById("menuLayer").classList.contains("hidden");
+
+  const viewOpen =
+    !document.getElementById("viewLayer").classList.contains("hidden");
+
+  if(viewOpen){
+    closeMenuView();
+    return;
+  }
+
+  if(menuOpen){
+    closeMenu();
+    return;
+  }
+
+  openMenu();
+}, { passive: true });
+
 /* KEYBOARD */
+
 document.addEventListener("keydown", e => {
   const popupOpen =
     !document.getElementById("popup").classList.contains("hidden");
@@ -258,7 +442,23 @@ document.addEventListener("keydown", e => {
   const notesOpen =
     !document.getElementById("notesPopup").classList.contains("hidden");
 
+  const menuOpen =
+    !document.getElementById("menuLayer").classList.contains("hidden");
+
+  const viewOpen =
+    !document.getElementById("viewLayer").classList.contains("hidden");
+
   if(e.key === "Escape"){
+    if(viewOpen) {
+      closeMenuView();
+      return;
+    }
+
+    if(menuOpen) {
+      closeMenu();
+      return;
+    }
+
     if(popupOpen) closePopup();
     if(notesOpen) closeNotesPopup();
   }
@@ -271,9 +471,19 @@ document.addEventListener("keydown", e => {
     e.preventDefault();
     addItem();
   }
+
+  if(
+    e.key === "Enter" &&
+    viewOpen &&
+    document.activeElement.id === "menu-list-input"
+  ){
+    e.preventDefault();
+    addMenuListItem();
+  }
 });
 
 /* NOTES */
+
 const notesRef = doc(db, "snabbanteckningar", "main");
 
 async function loadNote(){
@@ -320,6 +530,7 @@ window.saveNote = async () => {
 loadNote();
 
 /* WEATHER */
+
 async function loadWeather(){
   const res = await fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=59.3&longitude=18.4&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FStockholm"
@@ -347,6 +558,7 @@ async function loadWeather(){
 loadWeather();
 
 /* AUTO REFRESH */
+
 setInterval(() => {
   location.reload();
 }, 180000);
