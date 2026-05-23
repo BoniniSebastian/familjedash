@@ -21,7 +21,7 @@
 
     <div class="top-center">
 
-     <div class="clock-block" onclick="location.reload()">
+      <div class="clock-block" onclick="location.reload()">
         <div id="time"></div>
         <div id="date"></div>
       </div>
@@ -71,6 +71,71 @@
         src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
       </iframe>
 
+    </div>
+
+  </div>
+
+</div>
+
+<!-- MENU LAYER -->
+
+<div id="menuLayer" class="menu-layer hidden">
+
+  <div class="menu-shell">
+
+    <h1>Meny</h1>
+
+    <div class="menu-list">
+      <button onclick="openMenuView('calendar')">KALENDER</button>
+      <button onclick="openMenuView('lists')">LISTOR</button>
+      <button onclick="openMenuView('links')">LÄNKAR</button>
+      <button class="disabled">KOMMER SNART</button>
+      <button class="disabled">KOMMER SNART</button>
+      <button class="disabled">KOMMER SNART</button>
+      <button class="disabled">KOMMER SNART</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- MENU VIEW LAYER -->
+
+<div id="viewLayer" class="view-layer hidden">
+
+  <div class="view-shell">
+
+    <h1 id="view-title">Meny</h1>
+
+    <div id="calendarView" class="menu-view hidden">
+      <iframe
+        class="calendar-full"
+        src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
+      </iframe>
+    </div>
+
+    <div id="listsView" class="menu-view hidden">
+      <div class="full-list-card">
+        <div class="full-list-title">LISTOR</div>
+
+        <div class="popup-section-title">Aktiva</div>
+        <ul id="menu-list-active"></ul>
+
+        <div class="input-row menu-input-row">
+          <input id="menu-list-input" placeholder="Lägg till i Listor..." />
+          <button onclick="addMenuListItem()">＋</button>
+        </div>
+
+        <div class="popup-section-title done-title">Slutförda</div>
+        <ul id="menu-list-done"></ul>
+      </div>
+    </div>
+
+    <div id="linksView" class="menu-view hidden">
+      <div class="coming-view">
+        <div class="full-list-title">LÄNKAR</div>
+        <p>Här bygger vi länkar i nästa steg.</p>
+      </div>
     </div>
 
   </div>
