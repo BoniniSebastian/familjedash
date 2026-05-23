@@ -412,7 +412,7 @@ document.addEventListener("touchend", e => {
   const diffY = endY - touchStartY;
   const diffX = Math.abs(endX - touchStartX);
 
-  if(diffY < 80 || diffX > 90) return;
+  if(diffY < 48 || diffX > 90) return;
 
   const menuOpen =
     !document.getElementById("menuLayer").classList.contains("hidden");
