@@ -20,6 +20,8 @@
   <div class="header">
     <div class="top-center">
 
+      <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Byt tema"></button>
+
       <div class="clock-block" onclick="location.reload()">
         <div id="time"></div>
         <div id="date"></div>
@@ -66,110 +68,120 @@
   </div>
 </div>
 
-<!-- MENU -->
-
 <div id="menuLayer" class="menu-layer hidden">
   <div class="menu-shell">
     <h1>Meny</h1>
 
     <div class="menu-list">
-      <button onclick="openMenuView('calendar')">KALENDER</button>
+      <button onclick="openMenuView('remember')">KOM-IHÅG</button>
       <button onclick="openMenuView('actions')">ACTIONS</button>
+      <button onclick="openMenuView('calendar')">KALENDER</button>
       <button onclick="openMenuView('links')">LÄNKAR</button>
       <button onclick="openMenuView('jobs')">JOBBSÖKAREN</button>
-      <button class="disabled">KOMMER SNART</button>
       <button class="disabled">KOMMER SNART</button>
       <button class="disabled">KOMMER SNART</button>
     </div>
   </div>
 </div>
 
-<!-- VIEW LAYER -->
-
 <div id="viewLayer" class="view-layer hidden">
-  <div class="view-shell">
 
-    <h1 id="view-title">Meny</h1>
-
-    <div id="calendarView" class="menu-view hidden fullbleed-view">
-      <iframe
-        class="calendar-full"
-        src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
-      </iframe>
-    </div>
-
-    <div id="rememberView" class="menu-view hidden">
-      <div class="view-inner">
-        <div class="view-big-title">KOM-IHÅG</div>
-
-        <div class="popup-section-title">Aktiva</div>
-        <ul id="remember-active"></ul>
-
-        <div class="input-row">
-          <input id="remember-input" placeholder="Lägg till i Kom-ihåg..." />
-          <button onclick="addViewItem('komIhag','remember-input')">＋</button>
-        </div>
-
-        <div class="popup-section-title done-title">Slutförda</div>
-        <ul id="remember-done"></ul>
-      </div>
-    </div>
-
-    <div id="actionsView" class="menu-view hidden">
-      <div class="view-inner">
-        <div class="view-big-title">ACTIONS</div>
-
-        <div class="popup-section-title">Aktiva</div>
-        <ul id="actions-active"></ul>
-
-        <div class="input-row">
-          <input id="actions-input" placeholder="Lägg till action..." />
-          <button onclick="addViewItem('attGora','actions-input')">＋</button>
-        </div>
-
-        <div class="popup-section-title done-title">Slutförda</div>
-        <ul id="actions-done"></ul>
-      </div>
-    </div>
-
-    <div id="notesView" class="menu-view hidden">
-      <div class="view-inner">
-        <div class="view-big-title">SNABBANTECKNINGAR</div>
-        <textarea id="notes-input" placeholder="Skriv här..."></textarea>
-        <button class="save-note" onclick="saveNote()">Spara</button>
-      </div>
-    </div>
-
-    <div id="linksView" class="menu-view hidden">
-      <div class="view-inner">
-        <div class="view-big-title">LÄNKAR</div>
-
-        <ul id="links-list"></ul>
-
-        <div class="link-form">
-          <input id="link-title-input" placeholder="Namn, t.ex. Aftonbladet" />
-          <input id="link-url-input" placeholder="URL, t.ex. www.aftonbladet.se" />
-          <button onclick="addLink()">＋ Lägg till länk</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="jobsView" class="menu-view hidden">
-      <div class="view-inner">
-        <div class="view-big-title">JOBBSÖKAREN</div>
-
-        <div class="job-form">
-          <input id="job-company-input" placeholder="Företag" />
-          <input id="job-status-input" placeholder="Status, t.ex. Ska söka" />
-          <textarea id="job-notes-input" placeholder="Anteckningar"></textarea>
-          <button onclick="saveJob()">Spara jobb</button>
-        </div>
-
-        <ul id="jobs-list"></ul>
-      </div>
-    </div>
-
+  <div id="calendarView" class="menu-view hidden fullbleed-view">
+    <iframe
+      class="calendar-full"
+      src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
+    </iframe>
   </div>
+
+  <div id="rememberView" class="menu-view hidden">
+    <div class="view-inner">
+      <div class="view-big-title">KOM-IHÅG</div>
+
+      <div class="section-label">Aktiva</div>
+      <ul id="remember-active"></ul>
+
+      <div class="input-row">
+        <input id="remember-input" placeholder="Lägg till i Kom-ihåg..." />
+        <button onclick="addViewItem('komIhag','remember-input')">＋</button>
+      </div>
+
+      <div class="section-label done-title">Slutförda</div>
+      <ul id="remember-done"></ul>
+    </div>
+  </div>
+
+  <div id="actionsView" class="menu-view hidden">
+    <div class="view-inner">
+      <div class="view-big-title">ACTIONS</div>
+
+      <div class="section-label">Aktiva</div>
+      <ul id="actions-active"></ul>
+
+      <div class="input-row">
+        <input id="actions-input" placeholder="Lägg till action..." />
+        <button onclick="addViewItem('attGora','actions-input')">＋</button>
+      </div>
+
+      <div class="section-label done-title">Slutförda</div>
+      <ul id="actions-done"></ul>
+    </div>
+  </div>
+
+  <div id="notesView" class="menu-view hidden">
+    <div class="view-inner">
+      <div class="view-big-title">SNABBANTECKNINGAR</div>
+      <textarea id="notes-input" placeholder="Skriv här..."></textarea>
+      <button class="save-note" onclick="saveNote()">Spara</button>
+    </div>
+  </div>
+
+  <div id="linksView" class="menu-view hidden">
+    <div class="view-inner">
+      <div class="view-big-title">LÄNKAR</div>
+
+      <ul id="links-list"></ul>
+
+      <div class="link-form">
+        <input id="link-title-input" placeholder="Namn, t.ex. Aftonbladet" />
+        <input id="link-url-input" placeholder="URL, t.ex. www.aftonbladet.se" />
+        <button onclick="addLink()">＋ Lägg till länk</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="jobsView" class="menu-view hidden">
+    <div class="view-inner">
+      <div class="view-big-title">JOBBSÖKAREN</div>
+
+      <div class="job-form">
+        <input id="job-company-input" placeholder="Företag" />
+        <input id="job-status-input" placeholder="Status, t.ex. Ska söka" />
+        <textarea id="job-notes-input" placeholder="Anteckningar"></textarea>
+        <button onclick="saveJob()">Spara jobb</button>
+      </div>
+
+      <ul id="jobs-list"></ul>
+    </div>
+  </div>
+
+  <div id="taskDetail" class="task-detail hidden">
+    <div class="task-detail-inner">
+      <input id="detail-title-input" class="detail-title-input" placeholder="Rubrik" />
+
+      <button id="detail-important" class="detail-important hidden" onclick="toggleDetailImportant()">Gör viktig</button>
+
+      <div class="section-label">Delmål</div>
+      <ul id="detail-subtasks"></ul>
+
+      <div class="input-row">
+        <input id="detail-subtask-input" placeholder="Lägg till delmål..." />
+        <button onclick="addDetailSubtask()">＋</button>
+      </div>
+
+      <button class="save-note" onclick="saveTaskDetail()">Spara</button>
+    </div>
+  </div>
+
 </div>
 
 <button id="layerClose" class="layer-close hidden" onclick="closeCurrentLayer()">×</button>
