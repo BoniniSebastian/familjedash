@@ -497,9 +497,10 @@ li{
   position:absolute;
   left:0;
   right:0;
-  top:52px;
+  top:0;
   bottom:0;
   overflow-y:auto;
+  padding-top:24px;
   padding-bottom:120px;
 }
 
