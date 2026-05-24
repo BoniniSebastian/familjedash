@@ -55,24 +55,24 @@ const imgs = [
   "assets/foton/5.jpg"
 ];
 
-let i = 0;
+let imgIndex = 0;
 const bg = document.getElementById("image-bg");
 
 function rotate(){
-  bg.style.backgroundImage = `url(${imgs[i]})`;
-  i = (i + 1) % imgs.length;
+  bg.style.backgroundImage = `url(${imgs[imgIndex]})`;
+  imgIndex = (imgIndex + 1) % imgs.length;
 }
 
 rotate();
-setInterval(rotate, 8000);
+setInterval(rotate, 30000);
 
-/* CARD PREVIEWS */
+/* HOME PREVIEWS */
 
-function bind(col, id){
-  const q = query(collection(db, col), orderBy("createdAt", "asc"));
+function bindRememberPreview(){
+  const q = query(collection(db, "komIhag"), orderBy("createdAt", "asc"));
 
   onSnapshot(q, snap => {
-    const el = document.getElementById(id);
+    const el = document.getElementById("komihag-list");
     el.innerHTML = "";
 
     snap.forEach(d => {
@@ -80,14 +80,47 @@ function bind(col, id){
       if(data.done) return;
 
       const li = document.createElement("li");
+      if(data.important) li.classList.add("important-dot");
       li.textContent = data.text;
       el.appendChild(li);
     });
   });
 }
 
-bind("komIhag", "komihag-list");
-bind("attGora", "attgora-list");
+function bindActionsPreview(){
+  const q = query(collection(db, "attGora"), orderBy("createdAt", "asc"));
+
+  onSnapshot(q, snap => {
+    const el = document.getElementById("actions-list");
+    el.innerHTML = "";
+
+    snap.forEach(d => {
+      const data = d.data();
+      if(data.done) return;
+
+      const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
+      const doneCount = subtasks.filter(s => s.done).length;
+
+      const li = document.createElement("li");
+
+      const title = document.createElement("span");
+      title.textContent = data.text;
+      li.appendChild(title);
+
+      if(subtasks.length > 0){
+        const meta = document.createElement("div");
+        meta.className = "subtask-count-preview";
+        meta.textContent = `${doneCount} av ${subtasks.length}`;
+        li.appendChild(meta);
+      }
+
+      el.appendChild(li);
+    });
+  });
+}
+
+bindRememberPreview();
+bindActionsPreview();
 
 /* TASK RENDERER */
 
@@ -120,7 +153,6 @@ function renderTaskItem(type, d){
 
   span.onclick = async () => {
     const val = prompt("Ändra", data.text);
-
     if(val && val.trim()){
       await updateDoc(doc(db, type, d.id), {
         text: val.trim()
@@ -131,14 +163,33 @@ function renderTaskItem(type, d){
   left.appendChild(check);
   left.appendChild(span);
 
+  const controls = document.createElement("div");
+  controls.className = "task-controls";
+
+  if(type === "komIhag"){
+    const important = document.createElement("button");
+    important.className = data.important ? "important-btn active" : "important-btn";
+    important.textContent = data.important ? "Viktig" : "Gör viktig";
+
+    important.onclick = async (e) => {
+      e.stopPropagation();
+      await updateDoc(doc(db, type, d.id), {
+        important: !data.important
+      });
+    };
+
+    controls.appendChild(important);
+  }
+
   const del = document.createElement("button");
   del.className = "delete-btn";
   del.textContent = "Ta bort";
-
   del.onclick = () => deleteDoc(doc(db, type, d.id));
 
+  controls.appendChild(del);
+
   topRow.appendChild(left);
-  topRow.appendChild(del);
+  topRow.appendChild(controls);
 
   li.appendChild(topRow);
 
@@ -229,84 +280,66 @@ function renderTaskItem(type, d){
   return li;
 }
 
-/* POPUP */
+/* VIEW SYSTEM */
 
-let current = "";
-let unsubscribePopup = null;
+let activeView = null;
+let viewReturnTarget = "home";
+let unsubscribeRemember = null;
+let unsubscribeActions = null;
+let unsubscribeLinks = null;
+let unsubscribeJobs = null;
+let editingJobId = null;
 
-window.openPopup = (type, title) => {
-  current = type;
+function showCloseButton(){
+  document.getElementById("layerClose").classList.remove("hidden");
+}
 
-  document.getElementById("popup-title").textContent = title;
-  document.getElementById("popup").classList.remove("hidden");
+function hideCloseButton(){
+  document.getElementById("layerClose").classList.add("hidden");
+}
 
-  const activeList = document.getElementById("popup-list");
-  const doneList = document.getElementById("popup-done-list");
-  const input = document.getElementById("popup-input");
+function lockPage(){
+  document.body.classList.add("layer-open");
+}
 
-  input.value = "";
-  setTimeout(() => input.focus(), 100);
-
-  if(unsubscribePopup) unsubscribePopup();
-
-  const q = query(collection(db, type), orderBy("createdAt", "asc"));
-
-  unsubscribePopup = onSnapshot(q, snap => {
-    activeList.innerHTML = "";
-    doneList.innerHTML = "";
-
-    snap.forEach(d => {
-      const data = d.data();
-      const item = renderTaskItem(type, d);
-
-      if(data.done){
-        doneList.appendChild(item);
-      } else {
-        activeList.appendChild(item);
-      }
-    });
-  });
-};
-
-window.closePopup = () => {
-  document.getElementById("popup").classList.add("hidden");
-};
-
-window.addItem = async () => {
-  const input = document.getElementById("popup-input");
-
-  if(!input.value.trim()) return;
-
-  await addDoc(collection(db, current), {
-    text: input.value.trim(),
-    createdAt: Date.now(),
-    done: false,
-    subtasks: []
-  });
-
-  input.value = "";
-  input.focus();
-};
-
-/* MENU SYSTEM */
-
-let activeMenuView = null;
-let unsubscribeMenuList = null;
+function unlockPage(){
+  document.body.classList.remove("layer-open");
+}
 
 window.openMenu = () => {
   document.getElementById("menuLayer").classList.remove("hidden");
+  document.getElementById("menuLayer").classList.add("menu-bounce");
+  lockPage();
+  showCloseButton();
+
+  setTimeout(() => {
+    document.getElementById("menuLayer").classList.remove("menu-bounce");
+  }, 520);
 };
 
 window.closeMenu = () => {
-  closeMenuView();
-
+  closeMenuView(false);
   document.getElementById("menuLayer").classList.add("hidden");
+  hideCloseButton();
+  unlockPage();
 };
 
 window.openMenuView = (view) => {
-  activeMenuView = view;
+  viewReturnTarget = "menu";
+  openView(view);
+};
+
+window.openDashboardView = (view) => {
+  viewReturnTarget = "home";
+  openView(view);
+};
+
+function openView(view){
+  activeView = view;
 
   document.getElementById("viewLayer").classList.remove("hidden");
+  lockPage();
+  showCloseButton();
 
   document.querySelectorAll(".menu-view").forEach(el => {
     el.classList.add("hidden");
@@ -317,37 +350,112 @@ window.openMenuView = (view) => {
     document.getElementById("calendarView").classList.remove("hidden");
   }
 
-  if(view === "lists"){
-    document.getElementById("view-title").textContent = "Meny";
-    document.getElementById("listsView").classList.remove("hidden");
-    bindMenuListView();
+  if(view === "remember"){
+    document.getElementById("view-title").textContent = viewReturnTarget === "menu" ? "Meny" : "Kom-ihåg";
+    document.getElementById("rememberView").classList.remove("hidden");
+    bindRememberView();
+  }
+
+  if(view === "actions"){
+    document.getElementById("view-title").textContent = viewReturnTarget === "menu" ? "Meny" : "Actions";
+    document.getElementById("actionsView").classList.remove("hidden");
+    bindActionsView();
+  }
+
+  if(view === "notes"){
+    document.getElementById("view-title").textContent = "Snabbanteckningar";
+    document.getElementById("notesView").classList.remove("hidden");
+    openNotesView();
   }
 
   if(view === "links"){
     document.getElementById("view-title").textContent = "Meny";
     document.getElementById("linksView").classList.remove("hidden");
+    bindLinksView();
   }
-};
 
-window.closeMenuView = () => {
-  activeMenuView = null;
+  if(view === "jobs"){
+    document.getElementById("view-title").textContent = "Meny";
+    document.getElementById("jobsView").classList.remove("hidden");
+    bindJobsView();
+  }
+}
 
+window.closeMenuView = (manageClose = true) => {
+  activeView = null;
   document.getElementById("viewLayer").classList.add("hidden");
 
   document.querySelectorAll(".menu-view").forEach(el => {
     el.classList.add("hidden");
   });
+
+  if(manageClose){
+    if(viewReturnTarget === "menu"){
+      showCloseButton();
+      lockPage();
+    } else {
+      hideCloseButton();
+      unlockPage();
+    }
+  }
 };
 
-function bindMenuListView(){
-  const activeList = document.getElementById("menu-list-active");
-  const doneList = document.getElementById("menu-list-done");
+window.closeCurrentLayer = () => {
+  const viewOpen =
+    !document.getElementById("viewLayer").classList.contains("hidden");
 
-  if(unsubscribeMenuList) unsubscribeMenuList();
+  const menuOpen =
+    !document.getElementById("menuLayer").classList.contains("hidden");
+
+  if(viewOpen){
+    closeMenuView(true);
+    return;
+  }
+
+  if(menuOpen){
+    closeMenu();
+    return;
+  }
+};
+
+/* REMEMBER VIEW */
+
+function bindRememberView(){
+  const activeList = document.getElementById("remember-active");
+  const doneList = document.getElementById("remember-done");
+
+  if(unsubscribeRemember) unsubscribeRemember();
+
+  const q = query(collection(db, "komIhag"), orderBy("createdAt", "asc"));
+
+  unsubscribeRemember = onSnapshot(q, snap => {
+    activeList.innerHTML = "";
+    doneList.innerHTML = "";
+
+    snap.forEach(d => {
+      const data = d.data();
+      const item = renderTaskItem("komIhag", d);
+
+      if(data.done){
+        doneList.appendChild(item);
+      } else {
+        activeList.appendChild(item);
+      }
+    });
+  });
+}
+
+/* ACTIONS VIEW */
+
+function bindActionsView(){
+  const activeList = document.getElementById("actions-active");
+  const doneList = document.getElementById("actions-done");
+
+  if(unsubscribeActions) unsubscribeActions();
 
   const q = query(collection(db, "attGora"), orderBy("createdAt", "asc"));
 
-  unsubscribeMenuList = onSnapshot(q, snap => {
+  unsubscribeActions = onSnapshot(q, snap => {
     activeList.innerHTML = "";
     doneList.innerHTML = "";
 
@@ -364,20 +472,265 @@ function bindMenuListView(){
   });
 }
 
-window.addMenuListItem = async () => {
-  const input = document.getElementById("menu-list-input");
+window.addViewItem = async (collectionName, inputId) => {
+  const input = document.getElementById(inputId);
 
   if(!input.value.trim()) return;
 
-  await addDoc(collection(db, "attGora"), {
+  await addDoc(collection(db, collectionName), {
     text: input.value.trim(),
     createdAt: Date.now(),
     done: false,
+    important: false,
     subtasks: []
   });
 
   input.value = "";
   input.focus();
+};
+
+/* NOTES */
+
+const notesRef = doc(db, "snabbanteckningar", "main");
+
+async function loadNote(){
+  const snap = await getDoc(notesRef);
+
+  if(snap.exists()){
+    const text = snap.data().text || "";
+
+    document.getElementById("notes-preview").textContent =
+      text.trim() ? text : "Tryck för att skriva.";
+  }
+}
+
+async function openNotesView(){
+  const snap = await getDoc(notesRef);
+  const text = snap.exists() ? snap.data().text || "" : "";
+
+  document.getElementById("notes-input").value = text;
+
+  setTimeout(() => {
+    document.getElementById("notes-input").focus();
+  }, 100);
+}
+
+window.saveNote = async () => {
+  const text = document.getElementById("notes-input").value;
+
+  await setDoc(notesRef, {
+    text,
+    updatedAt: Date.now()
+  });
+
+  document.getElementById("notes-preview").textContent =
+    text.trim() ? text : "Tryck för att skriva.";
+};
+
+loadNote();
+
+/* LINKS */
+
+function normalizeUrl(url){
+  if(!url) return "";
+  const trimmed = url.trim();
+
+  if(trimmed.startsWith("http://") || trimmed.startsWith("https://")){
+    return trimmed;
+  }
+
+  return "https://" + trimmed;
+}
+
+function bindLinksView(){
+  const list = document.getElementById("links-list");
+
+  if(unsubscribeLinks) unsubscribeLinks();
+
+  const q = query(collection(db, "lankar"), orderBy("createdAt", "asc"));
+
+  unsubscribeLinks = onSnapshot(q, snap => {
+    list.innerHTML = "";
+
+    snap.forEach(d => {
+      const data = d.data();
+
+      const li = document.createElement("li");
+      li.className = "link-item";
+
+      const a = document.createElement("a");
+      a.href = normalizeUrl(data.url);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = data.title || data.url;
+
+      const urlText = document.createElement("div");
+      urlText.className = "link-url";
+      urlText.textContent = data.url;
+
+      const left = document.createElement("div");
+      left.appendChild(a);
+      left.appendChild(urlText);
+
+      const controls = document.createElement("div");
+      controls.className = "task-controls";
+
+      const edit = document.createElement("button");
+      edit.className = "delete-btn";
+      edit.textContent = "Ändra";
+      edit.onclick = async () => {
+        const newTitle = prompt("Namn", data.title || "");
+        if(newTitle === null) return;
+
+        const newUrl = prompt("URL", data.url || "");
+        if(newUrl === null) return;
+
+        await updateDoc(doc(db, "lankar", d.id), {
+          title: newTitle.trim(),
+          url: newUrl.trim()
+        });
+      };
+
+      const del = document.createElement("button");
+      del.className = "delete-btn";
+      del.textContent = "Ta bort";
+      del.onclick = () => deleteDoc(doc(db, "lankar", d.id));
+
+      controls.appendChild(edit);
+      controls.appendChild(del);
+
+      li.appendChild(left);
+      li.appendChild(controls);
+
+      list.appendChild(li);
+    });
+  });
+}
+
+window.addLink = async () => {
+  const titleInput = document.getElementById("link-title-input");
+  const urlInput = document.getElementById("link-url-input");
+
+  const title = titleInput.value.trim();
+  const url = urlInput.value.trim();
+
+  if(!title || !url) return;
+
+  await addDoc(collection(db, "lankar"), {
+    title,
+    url,
+    createdAt: Date.now()
+  });
+
+  titleInput.value = "";
+  urlInput.value = "";
+  titleInput.focus();
+};
+
+/* JOBS */
+
+function clearJobForm(){
+  editingJobId = null;
+  document.getElementById("job-company-input").value = "";
+  document.getElementById("job-status-input").value = "";
+  document.getElementById("job-notes-input").value = "";
+}
+
+function bindJobsView(){
+  const list = document.getElementById("jobs-list");
+
+  if(unsubscribeJobs) unsubscribeJobs();
+
+  const q = query(collection(db, "jobbsokaren"), orderBy("createdAt", "desc"));
+
+  unsubscribeJobs = onSnapshot(q, snap => {
+    list.innerHTML = "";
+
+    snap.forEach(d => {
+      const data = d.data();
+
+      const li = document.createElement("li");
+      li.className = "job-item";
+
+      const top = document.createElement("div");
+      top.className = "job-top";
+
+      const company = document.createElement("div");
+      company.className = "job-company";
+      company.textContent = data.company || "Utan företag";
+
+      const status = document.createElement("div");
+      status.className = "job-status";
+      status.textContent = data.status || "Ingen status";
+
+      top.appendChild(company);
+      top.appendChild(status);
+
+      const notes = document.createElement("div");
+      notes.className = "job-notes";
+      notes.textContent = data.notes || "";
+
+      const controls = document.createElement("div");
+      controls.className = "task-controls job-controls";
+
+      const edit = document.createElement("button");
+      edit.className = "delete-btn";
+      edit.textContent = "Ändra";
+
+      edit.onclick = () => {
+        editingJobId = d.id;
+        document.getElementById("job-company-input").value = data.company || "";
+        document.getElementById("job-status-input").value = data.status || "";
+        document.getElementById("job-notes-input").value = data.notes || "";
+        document.getElementById("job-company-input").focus();
+      };
+
+      const del = document.createElement("button");
+      del.className = "delete-btn";
+      del.textContent = "Ta bort";
+      del.onclick = () => deleteDoc(doc(db, "jobbsokaren", d.id));
+
+      controls.appendChild(edit);
+      controls.appendChild(del);
+
+      li.appendChild(top);
+
+      if(data.notes){
+        li.appendChild(notes);
+      }
+
+      li.appendChild(controls);
+
+      list.appendChild(li);
+    });
+  });
+}
+
+window.saveJob = async () => {
+  const company = document.getElementById("job-company-input").value.trim();
+  const status = document.getElementById("job-status-input").value.trim();
+  const notes = document.getElementById("job-notes-input").value.trim();
+
+  if(!company && !status && !notes) return;
+
+  if(editingJobId){
+    await updateDoc(doc(db, "jobbsokaren", editingJobId), {
+      company,
+      status,
+      notes,
+      updatedAt: Date.now()
+    });
+  } else {
+    await addDoc(collection(db, "jobbsokaren"), {
+      company,
+      status,
+      notes,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+  }
+
+  clearJobForm();
 };
 
 /* SWIPE DOWN GESTURE */
@@ -418,23 +771,13 @@ document.addEventListener("touchstart", e => {
   const viewOpen =
     !document.getElementById("viewLayer").classList.contains("hidden");
 
-  const popupOpen =
-    !document.getElementById("popup").classList.contains("hidden");
-
-  const notesOpen =
-    !document.getElementById("notesPopup").classList.contains("hidden");
-
   const pageIsAtTop =
     window.scrollY <= 5;
 
   validSwipeStart =
-    !popupOpen &&
-    !notesOpen &&
-    (
-      menuOpen ||
-      viewOpen ||
-      pageIsAtTop
-    );
+    menuOpen ||
+    viewOpen ||
+    pageIsAtTop;
 
 }, { passive: true });
 
@@ -450,14 +793,14 @@ document.addEventListener("touchend", e => {
 
   if(diffY < 48 || diffX > 90) return;
 
-  const menuOpen =
-    !document.getElementById("menuLayer").classList.contains("hidden");
-
   const viewOpen =
     !document.getElementById("viewLayer").classList.contains("hidden");
 
+  const menuOpen =
+    !document.getElementById("menuLayer").classList.contains("hidden");
+
   if(viewOpen){
-    closeMenuView();
+    closeMenuView(true);
     return;
   }
 
@@ -473,98 +816,36 @@ document.addEventListener("touchend", e => {
 /* KEYBOARD */
 
 document.addEventListener("keydown", e => {
-  const popupOpen =
-    !document.getElementById("popup").classList.contains("hidden");
-
-  const notesOpen =
-    !document.getElementById("notesPopup").classList.contains("hidden");
+  const viewOpen =
+    !document.getElementById("viewLayer").classList.contains("hidden");
 
   const menuOpen =
     !document.getElementById("menuLayer").classList.contains("hidden");
 
-  const viewOpen =
-    !document.getElementById("viewLayer").classList.contains("hidden");
-
   if(e.key === "Escape"){
-    if(viewOpen) {
-      closeMenuView();
+    if(viewOpen || menuOpen){
+      closeCurrentLayer();
       return;
     }
+  }
 
-    if(menuOpen) {
-      closeMenu();
-      return;
+  if(e.key === "Enter"){
+    if(document.activeElement.id === "remember-input"){
+      e.preventDefault();
+      addViewItem("komIhag", "remember-input");
     }
 
-    if(popupOpen) closePopup();
-    if(notesOpen) closeNotesPopup();
-  }
+    if(document.activeElement.id === "actions-input"){
+      e.preventDefault();
+      addViewItem("attGora", "actions-input");
+    }
 
-  if(
-    e.key === "Enter" &&
-    popupOpen &&
-    document.activeElement.id === "popup-input"
-  ){
-    e.preventDefault();
-    addItem();
-  }
-
-  if(
-    e.key === "Enter" &&
-    viewOpen &&
-    document.activeElement.id === "menu-list-input"
-  ){
-    e.preventDefault();
-    addMenuListItem();
+    if(document.activeElement.id === "link-url-input"){
+      e.preventDefault();
+      addLink();
+    }
   }
 });
-
-/* NOTES */
-
-const notesRef = doc(db, "snabbanteckningar", "main");
-
-async function loadNote(){
-  const snap = await getDoc(notesRef);
-
-  if(snap.exists()){
-    const text = snap.data().text || "";
-
-    document.getElementById("notes-preview").textContent =
-      text.trim() ? text : "Tryck för att skriva.";
-  }
-}
-
-window.openNotesPopup = async () => {
-  const snap = await getDoc(notesRef);
-  const text = snap.exists() ? snap.data().text || "" : "";
-
-  document.getElementById("notes-input").value = text;
-  document.getElementById("notesPopup").classList.remove("hidden");
-
-  setTimeout(() => {
-    document.getElementById("notes-input").focus();
-  }, 100);
-};
-
-window.closeNotesPopup = () => {
-  document.getElementById("notesPopup").classList.add("hidden");
-};
-
-window.saveNote = async () => {
-  const text = document.getElementById("notes-input").value;
-
-  await setDoc(notesRef, {
-    text,
-    updatedAt: Date.now()
-  });
-
-  document.getElementById("notes-preview").textContent =
-    text.trim() ? text : "Tryck för att skriva.";
-
-  closeNotesPopup();
-};
-
-loadNote();
 
 /* WEATHER */
 
