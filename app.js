@@ -23,6 +23,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let savedScrollY = 0;
+let activeView = null;
+let viewReturnTarget = "home";
+let editingJobId = null;
+let detailTask = null;
+
+let unsubscribeRemember = null;
+let unsubscribeActions = null;
+let unsubscribeLinks = null;
+let unsubscribeJobs = null;
+
+/* THEME */
+
+function applyTheme(theme){
+  document.body.classList.toggle("light-mode", theme === "light");
+  localStorage.setItem("dashboardTheme", theme);
+}
+
+window.toggleTheme = () => {
+  const isLight = document.body.classList.contains("light-mode");
+  applyTheme(isLight ? "dark" : "light");
+};
+
+applyTheme(localStorage.getItem("dashboardTheme") || "dark");
+
 /* CLOCK */
 
 function updateClock(){
@@ -64,9 +89,40 @@ function rotate(){
 }
 
 rotate();
-setInterval(rotate, 30000);
+setInterval(rotate, 60000);
+
+/* PAGE LOCK */
+
+function lockPage(){
+  savedScrollY = window.scrollY || 0;
+  document.body.classList.add("layer-open");
+  document.body.style.top = `-${savedScrollY}px`;
+}
+
+function unlockPage(){
+  document.body.classList.remove("layer-open");
+  document.body.style.top = "";
+  window.scrollTo(0, savedScrollY);
+}
+
+function showCloseButton(){
+  document.getElementById("layerClose").classList.remove("hidden");
+}
+
+function hideCloseButton(){
+  document.getElementById("layerClose").classList.add("hidden");
+}
 
 /* HOME PREVIEWS */
+
+function getSubtaskMeta(data){
+  const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
+  const doneCount = subtasks.filter(s => s.done).length;
+
+  if(subtasks.length === 0) return "";
+
+  return `${doneCount} av ${subtasks.length} slutförda`;
+}
 
 function bindRememberPreview(){
   const q = query(collection(db, "komIhag"), orderBy("createdAt", "asc"));
@@ -81,7 +137,19 @@ function bindRememberPreview(){
 
       const li = document.createElement("li");
       if(data.important) li.classList.add("important-dot");
-      li.textContent = data.text;
+
+      const title = document.createElement("span");
+      title.textContent = data.text;
+      li.appendChild(title);
+
+      const metaText = getSubtaskMeta(data);
+      if(metaText){
+        const meta = document.createElement("div");
+        meta.className = "subtask-count-preview";
+        meta.textContent = metaText;
+        li.appendChild(meta);
+      }
+
       el.appendChild(li);
     });
   });
@@ -98,19 +166,17 @@ function bindActionsPreview(){
       const data = d.data();
       if(data.done) return;
 
-      const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
-      const doneCount = subtasks.filter(s => s.done).length;
-
       const li = document.createElement("li");
 
       const title = document.createElement("span");
       title.textContent = data.text;
       li.appendChild(title);
 
-      if(subtasks.length > 0){
+      const metaText = getSubtaskMeta(data);
+      if(metaText){
         const meta = document.createElement("div");
         meta.className = "subtask-count-preview";
-        meta.textContent = `${doneCount} av ${subtasks.length}`;
+        meta.textContent = metaText;
         li.appendChild(meta);
       }
 
@@ -122,17 +188,18 @@ function bindActionsPreview(){
 bindRememberPreview();
 bindActionsPreview();
 
-/* TASK RENDERER */
+/* TASK ITEMS */
 
 function renderTaskItem(type, d){
   const data = d.data();
-  const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
+  const metaText = getSubtaskMeta(data);
 
   const li = document.createElement("li");
   li.className = "task-item";
+  if(data.done) li.classList.add("done-item");
 
-  const topRow = document.createElement("div");
-  topRow.className = "task-top-row";
+  const row = document.createElement("div");
+  row.className = "task-top-row";
 
   const left = document.createElement("div");
   left.className = "popup-item-left";
@@ -148,20 +215,21 @@ function renderTaskItem(type, d){
     });
   };
 
-  const span = document.createElement("span");
-  span.textContent = data.text;
+  const textWrap = document.createElement("div");
+  textWrap.className = "task-text-wrap";
 
-  span.onclick = async () => {
-    const val = prompt("Ändra", data.text);
-    if(val && val.trim()){
-      await updateDoc(doc(db, type, d.id), {
-        text: val.trim()
-      });
-    }
-  };
+  const title = document.createElement("span");
+  title.textContent = data.text;
+
+  const meta = document.createElement("div");
+  meta.className = "task-meta";
+  meta.textContent = metaText;
+
+  textWrap.appendChild(title);
+  if(metaText) textWrap.appendChild(meta);
 
   left.appendChild(check);
-  left.appendChild(span);
+  left.appendChild(textWrap);
 
   const controls = document.createElement("div");
   controls.className = "task-controls";
@@ -169,7 +237,7 @@ function renderTaskItem(type, d){
   if(type === "komIhag"){
     const important = document.createElement("button");
     important.className = data.important ? "important-btn active" : "important-btn";
-    important.textContent = data.important ? "Viktig" : "Gör viktig";
+    important.textContent = data.important ? "Viktig" : "Viktig";
 
     important.onclick = async (e) => {
       e.stopPropagation();
@@ -184,137 +252,29 @@ function renderTaskItem(type, d){
   const del = document.createElement("button");
   del.className = "delete-btn";
   del.textContent = "Ta bort";
-  del.onclick = () => deleteDoc(doc(db, type, d.id));
+
+  del.onclick = (e) => {
+    e.stopPropagation();
+    deleteDoc(doc(db, type, d.id));
+  };
 
   controls.appendChild(del);
 
-  topRow.appendChild(left);
-  topRow.appendChild(controls);
+  row.appendChild(left);
+  row.appendChild(controls);
+  li.appendChild(row);
 
-  li.appendChild(topRow);
-
-  const subWrap = document.createElement("div");
-  subWrap.className = "subtasks";
-
-  subtasks.forEach((sub, index) => {
-    const subRow = document.createElement("div");
-    subRow.className = sub.done ? "subtask done-subtask" : "subtask";
-
-    const subCheck = document.createElement("button");
-    subCheck.className = sub.done ? "sub-check checked" : "sub-check";
-    subCheck.textContent = sub.done ? "✓" : "";
-
-    subCheck.onclick = async (e) => {
-      e.stopPropagation();
-
-      const updated = [...subtasks];
-
-      updated[index] = {
-        ...updated[index],
-        done: !updated[index].done
-      };
-
-      await updateDoc(doc(db, type, d.id), {
-        subtasks: updated
-      });
-    };
-
-    const subText = document.createElement("span");
-    subText.textContent = sub.text;
-
-    const subDelete = document.createElement("button");
-    subDelete.className = "sub-delete";
-    subDelete.textContent = "×";
-
-    subDelete.onclick = async (e) => {
-      e.stopPropagation();
-
-      const updated = subtasks.filter((_, idx) => idx !== index);
-
-      await updateDoc(doc(db, type, d.id), {
-        subtasks: updated
-      });
-    };
-
-    subRow.appendChild(subCheck);
-    subRow.appendChild(subText);
-    subRow.appendChild(subDelete);
-
-    subWrap.appendChild(subRow);
-  });
-
-  const subInput = document.createElement("input");
-  subInput.className = "subtask-input";
-  subInput.placeholder = "Lägg till delmål...";
-
-  subInput.addEventListener("keydown", async (e) => {
-    if(e.key === "Enter"){
-      e.preventDefault();
-
-      const value = subInput.value.trim();
-      if(!value) return;
-
-      const updated = [
-        ...subtasks,
-        {
-          text: value,
-          done: false
-        }
-      ];
-
-      await updateDoc(doc(db, type, d.id), {
-        subtasks: updated
-      });
-
-      subInput.value = "";
-    }
-  });
-
-  subWrap.appendChild(subInput);
-  li.appendChild(subWrap);
-
-  if(data.done){
-    li.classList.add("done-item");
-  }
+  li.onclick = () => openTaskDetail(type, d.id, data);
 
   return li;
 }
 
 /* VIEW SYSTEM */
 
-let activeView = null;
-let viewReturnTarget = "home";
-let unsubscribeRemember = null;
-let unsubscribeActions = null;
-let unsubscribeLinks = null;
-let unsubscribeJobs = null;
-let editingJobId = null;
-
-function showCloseButton(){
-  document.getElementById("layerClose").classList.remove("hidden");
-}
-
-function hideCloseButton(){
-  document.getElementById("layerClose").classList.add("hidden");
-}
-
-function lockPage(){
-  document.body.classList.add("layer-open");
-}
-
-function unlockPage(){
-  document.body.classList.remove("layer-open");
-}
-
 window.openMenu = () => {
   document.getElementById("menuLayer").classList.remove("hidden");
-  document.getElementById("menuLayer").classList.add("menu-bounce");
   lockPage();
   showCloseButton();
-
-  setTimeout(() => {
-    document.getElementById("menuLayer").classList.remove("menu-bounce");
-  }, 520);
 };
 
 window.closeMenu = () => {
@@ -345,37 +305,33 @@ function openView(view){
     el.classList.add("hidden");
   });
 
+  closeTaskDetail(false);
+
   if(view === "calendar"){
-    document.getElementById("view-title").textContent = "Meny";
     document.getElementById("calendarView").classList.remove("hidden");
   }
 
   if(view === "remember"){
-    document.getElementById("view-title").textContent = viewReturnTarget === "menu" ? "Meny" : "Kom-ihåg";
     document.getElementById("rememberView").classList.remove("hidden");
     bindRememberView();
   }
 
   if(view === "actions"){
-    document.getElementById("view-title").textContent = viewReturnTarget === "menu" ? "Meny" : "Actions";
     document.getElementById("actionsView").classList.remove("hidden");
     bindActionsView();
   }
 
   if(view === "notes"){
-    document.getElementById("view-title").textContent = "Snabbanteckningar";
     document.getElementById("notesView").classList.remove("hidden");
     openNotesView();
   }
 
   if(view === "links"){
-    document.getElementById("view-title").textContent = "Meny";
     document.getElementById("linksView").classList.remove("hidden");
     bindLinksView();
   }
 
   if(view === "jobs"){
-    document.getElementById("view-title").textContent = "Meny";
     document.getElementById("jobsView").classList.remove("hidden");
     bindJobsView();
   }
@@ -383,6 +339,8 @@ function openView(view){
 
 window.closeMenuView = (manageClose = true) => {
   activeView = null;
+  closeTaskDetail(false);
+
   document.getElementById("viewLayer").classList.add("hidden");
 
   document.querySelectorAll(".menu-view").forEach(el => {
@@ -401,11 +359,19 @@ window.closeMenuView = (manageClose = true) => {
 };
 
 window.closeCurrentLayer = () => {
+  const detailOpen =
+    !document.getElementById("taskDetail").classList.contains("hidden");
+
   const viewOpen =
     !document.getElementById("viewLayer").classList.contains("hidden");
 
   const menuOpen =
     !document.getElementById("menuLayer").classList.contains("hidden");
+
+  if(detailOpen){
+    closeTaskDetail(true);
+    return;
+  }
 
   if(viewOpen){
     closeMenuView(true);
@@ -418,7 +384,7 @@ window.closeCurrentLayer = () => {
   }
 };
 
-/* REMEMBER VIEW */
+/* REMEMBER / ACTIONS */
 
 function bindRememberView(){
   const activeList = document.getElementById("remember-active");
@@ -444,8 +410,6 @@ function bindRememberView(){
     });
   });
 }
-
-/* ACTIONS VIEW */
 
 function bindActionsView(){
   const activeList = document.getElementById("actions-active");
@@ -487,6 +451,127 @@ window.addViewItem = async (collectionName, inputId) => {
 
   input.value = "";
   input.focus();
+};
+
+/* TASK DETAIL */
+
+function openTaskDetail(type, id, data){
+  detailTask = {
+    type,
+    id,
+    data: {
+      ...data,
+      subtasks: Array.isArray(data.subtasks) ? data.subtasks : []
+    }
+  };
+
+  document.getElementById("detail-title-input").value = detailTask.data.text || "";
+
+  const importantBtn = document.getElementById("detail-important");
+
+  if(type === "komIhag"){
+    importantBtn.classList.remove("hidden");
+    importantBtn.textContent = detailTask.data.important ? "Viktig markerad" : "Gör viktig";
+    importantBtn.classList.toggle("active", !!detailTask.data.important);
+  } else {
+    importantBtn.classList.add("hidden");
+  }
+
+  renderDetailSubtasks();
+
+  document.getElementById("taskDetail").classList.remove("hidden");
+
+  setTimeout(() => {
+    document.getElementById("detail-title-input").focus();
+  }, 80);
+}
+
+function closeTaskDetail(){
+  document.getElementById("taskDetail").classList.add("hidden");
+  detailTask = null;
+}
+
+window.toggleDetailImportant = () => {
+  if(!detailTask) return;
+
+  detailTask.data.important = !detailTask.data.important;
+
+  const btn = document.getElementById("detail-important");
+  btn.textContent = detailTask.data.important ? "Viktig markerad" : "Gör viktig";
+  btn.classList.toggle("active", !!detailTask.data.important);
+};
+
+function renderDetailSubtasks(){
+  const list = document.getElementById("detail-subtasks");
+  list.innerHTML = "";
+
+  if(!detailTask) return;
+
+  detailTask.data.subtasks.forEach((sub, index) => {
+    const li = document.createElement("li");
+    li.className = sub.done ? "subtask detail-subtask done-subtask" : "subtask detail-subtask";
+
+    const check = document.createElement("button");
+    check.className = sub.done ? "sub-check checked" : "sub-check";
+    check.textContent = sub.done ? "✓" : "";
+
+    check.onclick = () => {
+      detailTask.data.subtasks[index].done = !detailTask.data.subtasks[index].done;
+      renderDetailSubtasks();
+    };
+
+    const text = document.createElement("span");
+    text.textContent = sub.text;
+
+    const del = document.createElement("button");
+    del.className = "sub-delete";
+    del.textContent = "×";
+
+    del.onclick = () => {
+      detailTask.data.subtasks = detailTask.data.subtasks.filter((_, i) => i !== index);
+      renderDetailSubtasks();
+    };
+
+    li.appendChild(check);
+    li.appendChild(text);
+    li.appendChild(del);
+
+    list.appendChild(li);
+  });
+}
+
+window.addDetailSubtask = () => {
+  if(!detailTask) return;
+
+  const input = document.getElementById("detail-subtask-input");
+  const value = input.value.trim();
+
+  if(!value) return;
+
+  detailTask.data.subtasks.push({
+    text: value,
+    done: false
+  });
+
+  input.value = "";
+  renderDetailSubtasks();
+  input.focus();
+};
+
+window.saveTaskDetail = async () => {
+  if(!detailTask) return;
+
+  const title = document.getElementById("detail-title-input").value.trim();
+
+  if(!title) return;
+
+  await updateDoc(doc(db, detailTask.type, detailTask.id), {
+    text: title,
+    important: !!detailTask.data.important,
+    subtasks: detailTask.data.subtasks
+  });
+
+  closeTaskDetail();
 };
 
 /* NOTES */
@@ -558,6 +643,8 @@ function bindLinksView(){
       const li = document.createElement("li");
       li.className = "link-item";
 
+      const left = document.createElement("div");
+
       const a = document.createElement("a");
       a.href = normalizeUrl(data.url);
       a.target = "_blank";
@@ -568,7 +655,6 @@ function bindLinksView(){
       urlText.className = "link-url";
       urlText.textContent = data.url;
 
-      const left = document.createElement("div");
       left.appendChild(a);
       left.appendChild(urlText);
 
@@ -578,6 +664,7 @@ function bindLinksView(){
       const edit = document.createElement("button");
       edit.className = "delete-btn";
       edit.textContent = "Ändra";
+
       edit.onclick = async () => {
         const newTitle = prompt("Namn", data.title || "");
         if(newTitle === null) return;
@@ -700,7 +787,6 @@ function bindJobsView(){
       }
 
       li.appendChild(controls);
-
       list.appendChild(li);
     });
   });
@@ -733,7 +819,7 @@ window.saveJob = async () => {
   clearJobForm();
 };
 
-/* SWIPE DOWN GESTURE */
+/* SWIPE DOWN */
 
 let touchStartY = 0;
 let touchStartX = 0;
@@ -793,11 +879,19 @@ document.addEventListener("touchend", e => {
 
   if(diffY < 48 || diffX > 90) return;
 
+  const detailOpen =
+    !document.getElementById("taskDetail").classList.contains("hidden");
+
   const viewOpen =
     !document.getElementById("viewLayer").classList.contains("hidden");
 
   const menuOpen =
     !document.getElementById("menuLayer").classList.contains("hidden");
+
+  if(detailOpen){
+    closeTaskDetail();
+    return;
+  }
 
   if(viewOpen){
     closeMenuView(true);
@@ -822,8 +916,11 @@ document.addEventListener("keydown", e => {
   const menuOpen =
     !document.getElementById("menuLayer").classList.contains("hidden");
 
+  const detailOpen =
+    !document.getElementById("taskDetail").classList.contains("hidden");
+
   if(e.key === "Escape"){
-    if(viewOpen || menuOpen){
+    if(detailOpen || viewOpen || menuOpen){
       closeCurrentLayer();
       return;
     }
@@ -838,6 +935,11 @@ document.addEventListener("keydown", e => {
     if(document.activeElement.id === "actions-input"){
       e.preventDefault();
       addViewItem("attGora", "actions-input");
+    }
+
+    if(document.activeElement.id === "detail-subtask-input"){
+      e.preventDefault();
+      addDetailSubtask();
     }
 
     if(document.activeElement.id === "link-url-input"){
