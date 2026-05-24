@@ -4,21 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Min Dashboard</title>
-
 <link rel="stylesheet" href="style.css">
-
 </head>
+
 <body>
 
 <div class="ambient ambient-one"></div>
 <div class="ambient ambient-two"></div>
+<div class="ambient ambient-three"></div>
+<div class="ambient ambient-four"></div>
 
 <div class="hero">
-
   <div id="image-bg"></div>
 
   <div class="header">
-
     <div class="top-center">
 
       <div class="clock-block" onclick="location.reload()">
@@ -28,7 +27,6 @@
 
       <div class="weather-top">
         <div id="weather-icon"></div>
-
         <div>
           <div id="weather-main"></div>
           <div id="weather-feels"></div>
@@ -37,164 +35,144 @@
       </div>
 
     </div>
-
   </div>
-
 </div>
 
 <div class="content">
-
   <div class="main-column">
 
-    <div class="box" onclick="openPopup('komIhag','Kom-ihåg')">
+    <div class="box remember-box" onclick="openDashboardView('remember')">
       <div class="card-title">Kom-ihåg</div>
       <ul id="komihag-list"></ul>
     </div>
 
-    <div class="box" onclick="openPopup('attGora','Listor')">
-      <div class="card-title">Listor</div>
-      <ul id="attgora-list"></ul>
+    <div class="box actions-box" onclick="openDashboardView('actions')">
+      <div class="card-title">Actions</div>
+      <ul id="actions-list"></ul>
     </div>
 
-    <div class="box notes-box" onclick="openNotesPopup()">
+    <div class="box notes-box" onclick="openDashboardView('notes')">
       <div class="card-title">Snabbanteckningar</div>
-
-      <div id="notes-preview">
-        Tryck för att skriva.
-      </div>
+      <div id="notes-preview">Tryck för att skriva.</div>
     </div>
 
     <div class="calendar-wrapper">
-
       <iframe
         class="calendar"
         src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
       </iframe>
-
     </div>
 
   </div>
-
 </div>
 
-<!-- MENU LAYER -->
+<!-- MENU -->
 
 <div id="menuLayer" class="menu-layer hidden">
-
   <div class="menu-shell">
-
     <h1>Meny</h1>
 
     <div class="menu-list">
       <button onclick="openMenuView('calendar')">KALENDER</button>
-      <button onclick="openMenuView('lists')">LISTOR</button>
+      <button onclick="openMenuView('actions')">ACTIONS</button>
       <button onclick="openMenuView('links')">LÄNKAR</button>
-      <button class="disabled">KOMMER SNART</button>
+      <button onclick="openMenuView('jobs')">JOBBSÖKAREN</button>
       <button class="disabled">KOMMER SNART</button>
       <button class="disabled">KOMMER SNART</button>
       <button class="disabled">KOMMER SNART</button>
     </div>
-
   </div>
-
 </div>
 
-<!-- MENU VIEW LAYER -->
+<!-- VIEW LAYER -->
 
 <div id="viewLayer" class="view-layer hidden">
-
   <div class="view-shell">
 
     <h1 id="view-title">Meny</h1>
 
-    <div id="calendarView" class="menu-view hidden">
+    <div id="calendarView" class="menu-view hidden fullbleed-view">
       <iframe
         class="calendar-full"
         src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
       </iframe>
     </div>
 
-    <div id="listsView" class="menu-view hidden">
-      <div class="full-list-card">
-        <div class="full-list-title">LISTOR</div>
+    <div id="rememberView" class="menu-view hidden">
+      <div class="view-inner">
+        <div class="view-big-title">KOM-IHÅG</div>
 
         <div class="popup-section-title">Aktiva</div>
-        <ul id="menu-list-active"></ul>
+        <ul id="remember-active"></ul>
 
-        <div class="input-row menu-input-row">
-          <input id="menu-list-input" placeholder="Lägg till i Listor..." />
-          <button onclick="addMenuListItem()">＋</button>
+        <div class="input-row">
+          <input id="remember-input" placeholder="Lägg till i Kom-ihåg..." />
+          <button onclick="addViewItem('komIhag','remember-input')">＋</button>
         </div>
 
         <div class="popup-section-title done-title">Slutförda</div>
-        <ul id="menu-list-done"></ul>
+        <ul id="remember-done"></ul>
+      </div>
+    </div>
+
+    <div id="actionsView" class="menu-view hidden">
+      <div class="view-inner">
+        <div class="view-big-title">ACTIONS</div>
+
+        <div class="popup-section-title">Aktiva</div>
+        <ul id="actions-active"></ul>
+
+        <div class="input-row">
+          <input id="actions-input" placeholder="Lägg till action..." />
+          <button onclick="addViewItem('attGora','actions-input')">＋</button>
+        </div>
+
+        <div class="popup-section-title done-title">Slutförda</div>
+        <ul id="actions-done"></ul>
+      </div>
+    </div>
+
+    <div id="notesView" class="menu-view hidden">
+      <div class="view-inner">
+        <div class="view-big-title">SNABBANTECKNINGAR</div>
+        <textarea id="notes-input" placeholder="Skriv här..."></textarea>
+        <button class="save-note" onclick="saveNote()">Spara</button>
       </div>
     </div>
 
     <div id="linksView" class="menu-view hidden">
-      <div class="coming-view">
-        <div class="full-list-title">LÄNKAR</div>
-        <p>Här bygger vi länkar i nästa steg.</p>
+      <div class="view-inner">
+        <div class="view-big-title">LÄNKAR</div>
+
+        <ul id="links-list"></ul>
+
+        <div class="link-form">
+          <input id="link-title-input" placeholder="Namn, t.ex. Aftonbladet" />
+          <input id="link-url-input" placeholder="URL, t.ex. www.aftonbladet.se" />
+          <button onclick="addLink()">＋ Lägg till länk</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="jobsView" class="menu-view hidden">
+      <div class="view-inner">
+        <div class="view-big-title">JOBBSÖKAREN</div>
+
+        <div class="job-form">
+          <input id="job-company-input" placeholder="Företag" />
+          <input id="job-status-input" placeholder="Status, t.ex. Ska söka" />
+          <textarea id="job-notes-input" placeholder="Anteckningar"></textarea>
+          <button onclick="saveJob()">Spara jobb</button>
+        </div>
+
+        <ul id="jobs-list"></ul>
       </div>
     </div>
 
   </div>
-
 </div>
 
-<!-- POPUP -->
-
-<div id="popup" class="popup hidden">
-
-  <div class="popup-card">
-
-    <button class="popup-x" onclick="closePopup()">×</button>
-
-    <h2 id="popup-title"></h2>
-
-    <div class="popup-section-title">
-      Aktiva
-    </div>
-
-    <ul id="popup-list"></ul>
-
-    <div class="input-row">
-      <input id="popup-input" placeholder="Lägg till..." />
-      <button onclick="addItem()">＋</button>
-    </div>
-
-    <div class="popup-section-title done-title">
-      Slutförda
-    </div>
-
-    <ul id="popup-done-list"></ul>
-
-  </div>
-
-</div>
-
-<!-- NOTES POPUP -->
-
-<div id="notesPopup" class="popup hidden">
-
-  <div class="popup-card notes-popup-card">
-
-    <button class="popup-x" onclick="closeNotesPopup()">×</button>
-
-    <h2>Snabbanteckningar</h2>
-
-    <textarea
-      id="notes-input"
-      placeholder="Skriv här..."
-    ></textarea>
-
-    <button class="save-note" onclick="saveNote()">
-      Spara
-    </button>
-
-  </div>
-
-</div>
+<button id="layerClose" class="layer-close hidden" onclick="closeCurrentLayer()">×</button>
 
 <script type="module" src="app.js"></script>
 
