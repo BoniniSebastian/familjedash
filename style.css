@@ -318,7 +318,7 @@ li{
 }
 
 #komihag-list li.important-dot::before{
-  background:#00cfff;
+background:#ff4da6;
   animation:pulseDot 1.55s ease-in-out infinite;
 }
 
