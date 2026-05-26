@@ -43,6 +43,152 @@
 <div class="content">
   <div class="main-column">
 
+    /* TIMER BAR */
+
+.focus-timer{
+  position:relative;
+  margin-bottom:14px;
+  padding:12px 14px;
+  background:rgba(255,255,255,.075);
+  border:1px solid rgba(255,255,255,.035);
+  backdrop-filter:blur(8px);
+  cursor:pointer;
+  z-index:2;
+}
+
+body.light-mode .focus-timer{
+  background:rgba(255,255,255,.72);
+  color:#080808;
+  border-color:rgba(0,0,0,.06);
+}
+
+.timer-topline{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:14px;
+  margin-bottom:9px;
+}
+
+#timer-time{
+  opacity:.55;
+  min-width:42px;
+}
+
+#timer-label{
+  font-weight:700;
+}
+
+.timer-track{
+  position:relative;
+  width:100%;
+  height:7px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+}
+
+body.light-mode .timer-track{
+  background:rgba(0,0,0,.08);
+}
+
+.timer-progress{
+  position:absolute;
+  right:0;
+  top:0;
+  height:100%;
+  width:0%;
+  transition:width .6s linear;
+  box-shadow:0 0 18px currentColor;
+}
+
+.timer-progress.calm{
+  background:#00cfff;
+  color:#00cfff;
+}
+
+.timer-progress.warning{
+  background:#ff4da6;
+  color:#ff4da6;
+}
+
+.timer-progress.danger{
+  background:#ff8c42;
+  color:#ff8c42;
+  animation:timerPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes timerPulse{
+  from{
+    opacity:.65;
+    filter:brightness(1);
+  }
+
+  to{
+    opacity:1;
+    filter:brightness(1.6);
+  }
+}
+
+/* FOCUS MODE */
+
+.below-timer{
+  position:relative;
+}
+
+body.focus-mode .below-timer::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.58);
+  z-index:5;
+  pointer-events:none;
+}
+
+body.focus-mode .focus-timer{
+  box-shadow:0 0 30px rgba(0,207,255,.25);
+}
+
+/* TIMER FORM */
+
+.timer-form{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.timer-form input{
+  padding:15px 16px;
+  border:none;
+  outline:none;
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+  color:inherit;
+  font-size:17px;
+}
+
+body.light-mode .timer-form input{
+  background:rgba(0,0,0,.06);
+}
+
+.timer-form button,
+.ghost-button{
+  padding:14px 18px;
+  background:#00cfff;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.ghost-button{
+  background:rgba(255,255,255,.08);
+  color:inherit;
+}
+
+body.light-mode .ghost-button{
+  background:rgba(0,0,0,.06);
+}
+
     <div class="box remember-box" onclick="openDashboardView('remember')">
       <div class="card-title">Kom-ihåg</div>
       <ul id="komihag-list"></ul>
