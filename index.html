@@ -20,15 +20,7 @@
   <div class="header">
     <div class="top-center">
 
-<div class="mode-dots">
-  <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Byt tema"></button>
-
-  <button id="focusToggle"
-          class="focus-toggle"
-          onclick="toggleFocusMode()"
-          aria-label="Focus mode">
-  </button>
-</div>
+      <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Byt tema"></button>
 
       <div class="clock-block" onclick="location.reload()">
         <div id="time"></div>
@@ -61,30 +53,26 @@
       </div>
     </div>
 
-    <div class="below-timer">
+    <div class="box remember-box" onclick="openDashboardView('remember')">
+      <div class="card-title">Kom-ihåg</div>
+      <ul id="komihag-list"></ul>
+    </div>
 
-      <div class="box remember-box" onclick="openDashboardView('remember')">
-        <div class="card-title">Kom-ihåg</div>
-        <ul id="komihag-list"></ul>
-      </div>
+    <div class="box actions-box" onclick="openDashboardView('actions')">
+      <div class="card-title">Actions</div>
+      <ul id="actions-list"></ul>
+    </div>
 
-      <div class="box actions-box" onclick="openDashboardView('actions')">
-        <div class="card-title">Actions</div>
-        <ul id="actions-list"></ul>
-      </div>
+    <div class="box notes-box" onclick="openDashboardView('notes')">
+      <div class="card-title">Snabbanteckningar</div>
+      <div id="notes-preview">Tryck för att skriva.</div>
+    </div>
 
-      <div class="box notes-box" onclick="openDashboardView('notes')">
-        <div class="card-title">Snabbanteckningar</div>
-        <div id="notes-preview">Tryck för att skriva.</div>
-      </div>
-
-      <div class="calendar-wrapper">
-        <iframe
-          class="calendar"
-          src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
-        </iframe>
-      </div>
-
+    <div class="calendar-wrapper">
+      <iframe
+        class="calendar"
+        src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
+      </iframe>
     </div>
 
   </div>
