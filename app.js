@@ -237,7 +237,7 @@ function renderTaskItem(type, d){
   if(type === "komIhag"){
     const important = document.createElement("button");
     important.className = data.important ? "important-btn active" : "important-btn";
-    important.textContent = data.important ? "Viktig" : "Viktig";
+    important.textContent = "Viktig";
 
     important.onclick = async (e) => {
       e.stopPropagation();
@@ -324,6 +324,11 @@ function openView(view){
   if(view === "notes"){
     document.getElementById("notesView").classList.remove("hidden");
     openNotesView();
+  }
+
+  if(view === "timer"){
+    document.getElementById("timerView").classList.remove("hidden");
+    openTimerView();
   }
 
   if(view === "links"){
@@ -573,6 +578,134 @@ window.saveTaskDetail = async () => {
 
   closeTaskDetail();
 };
+
+/* TIMER / FOCUS MODE */
+
+const timerRef = doc(db, "dashboardTimer", "main");
+let activeTimer = null;
+
+async function loadTimer(){
+  const snap = await getDoc(timerRef);
+
+  if(snap.exists()){
+    activeTimer = snap.data();
+    document.body.classList.toggle("focus-mode", !!activeTimer.focusMode);
+  }
+
+  updateTimerBar();
+}
+
+function getTodayTargetTime(timeString){
+  if(!timeString) return null;
+
+  const [hours, minutes] = timeString.split(":").map(Number);
+  const target = new Date();
+
+  target.setHours(hours, minutes, 0, 0);
+
+  return target;
+}
+
+function updateTimerBar(){
+  const timeEl = document.getElementById("timer-time");
+  const labelEl = document.getElementById("timer-label");
+  const progressEl = document.getElementById("timer-progress");
+
+  if(!timeEl || !labelEl || !progressEl) return;
+
+  if(!activeTimer || !activeTimer.time){
+    timeEl.textContent = "--:--";
+    labelEl.textContent = "Sätt timer";
+    progressEl.style.width = "0%";
+    progressEl.className = "timer-progress";
+    return;
+  }
+
+  const now = new Date();
+  const target = getTodayTargetTime(activeTimer.time);
+
+  const createdAt = activeTimer.createdAt
+    ? new Date(activeTimer.createdAt)
+    : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+
+  const total = target - createdAt;
+  const left = target - now;
+
+  const percent = total > 0
+    ? Math.max(0, Math.min(100, (left / total) * 100))
+    : 0;
+
+  timeEl.textContent = activeTimer.time;
+  labelEl.textContent = activeTimer.label || "Timer";
+  progressEl.style.width = percent + "%";
+
+  progressEl.className = "timer-progress";
+
+  if(left <= 0){
+    labelEl.textContent = (activeTimer.label || "Timer") + " · NU";
+    progressEl.classList.add("danger");
+  } else if(percent < 20){
+    progressEl.classList.add("danger");
+  } else if(percent < 45){
+    progressEl.classList.add("warning");
+  } else {
+    progressEl.classList.add("calm");
+  }
+}
+
+async function openTimerView(){
+  const snap = await getDoc(timerRef);
+  const data = snap.exists() ? snap.data() : {};
+
+  document.getElementById("timer-label-input").value = data.label || "";
+  document.getElementById("timer-time-input").value = data.time || "";
+}
+
+window.saveTimer = async () => {
+  const label = document.getElementById("timer-label-input").value.trim();
+  const time = document.getElementById("timer-time-input").value;
+
+  if(!time) return;
+
+  activeTimer = {
+    label,
+    time,
+    focusMode: document.body.classList.contains("focus-mode"),
+    createdAt: new Date().toISOString(),
+    updatedAt: Date.now()
+  };
+
+  await setDoc(timerRef, activeTimer);
+  updateTimerBar();
+};
+
+window.clearTimer = async () => {
+  activeTimer = null;
+
+  await setDoc(timerRef, {
+    label: "",
+    time: "",
+    focusMode: false,
+    updatedAt: Date.now()
+  });
+
+  document.body.classList.remove("focus-mode");
+  updateTimerBar();
+};
+
+window.toggleFocusMode = async () => {
+  const isFocus = !document.body.classList.contains("focus-mode");
+
+  document.body.classList.toggle("focus-mode", isFocus);
+
+  if(activeTimer){
+    activeTimer.focusMode = isFocus;
+    await setDoc(timerRef, activeTimer);
+  }
+};
+
+loadTimer();
+setInterval(updateTimerBar, 1000);
 
 /* NOTES */
 
@@ -838,51 +971,6 @@ function isTypingTarget(el){
   );
 }
 
-/* TRACKPAD / MOUSE WHEEL DOWN */
-
-let lastWheelTrigger = 0;
-
-document.addEventListener("wheel", e => {
-  const now = Date.now();
-
-  if(now - lastWheelTrigger < 700) return;
-  if(e.deltaY < 35) return;
-
-  const isAtTop = window.scrollY <= 5;
-
-  const menuOpen =
-    !document.getElementById("menuLayer").classList.contains("hidden");
-
-  const viewOpen =
-    !document.getElementById("viewLayer").classList.contains("hidden");
-
-  const detailOpen =
-    !document.getElementById("taskDetail").classList.contains("hidden");
-
-  if(detailOpen){
-    closeTaskDetail();
-    lastWheelTrigger = now;
-    return;
-  }
-
-  if(viewOpen){
-    closeMenuView(true);
-    lastWheelTrigger = now;
-    return;
-  }
-
-  if(menuOpen){
-    closeMenu();
-    lastWheelTrigger = now;
-    return;
-  }
-
-  if(isAtTop){
-    openMenu();
-    lastWheelTrigger = now;
-  }
-}, { passive: true });
-
 document.addEventListener("touchstart", e => {
   if(!e.touches || !e.touches.length) return;
 
@@ -950,6 +1038,51 @@ document.addEventListener("touchend", e => {
 
   openMenu();
 
+}, { passive: true });
+
+/* TRACKPAD / MOUSE WHEEL DOWN */
+
+let lastWheelTrigger = 0;
+
+document.addEventListener("wheel", e => {
+  const now = Date.now();
+
+  if(now - lastWheelTrigger < 700) return;
+  if(e.deltaY < 35) return;
+
+  const isAtTop = window.scrollY <= 5;
+
+  const menuOpen =
+    !document.getElementById("menuLayer").classList.contains("hidden");
+
+  const viewOpen =
+    !document.getElementById("viewLayer").classList.contains("hidden");
+
+  const detailOpen =
+    !document.getElementById("taskDetail").classList.contains("hidden");
+
+  if(detailOpen){
+    closeTaskDetail();
+    lastWheelTrigger = now;
+    return;
+  }
+
+  if(viewOpen){
+    closeMenuView(true);
+    lastWheelTrigger = now;
+    return;
+  }
+
+  if(menuOpen){
+    closeMenu();
+    lastWheelTrigger = now;
+    return;
+  }
+
+  if(isAtTop){
+    openMenu();
+    lastWheelTrigger = now;
+  }
 }, { passive: true });
 
 /* KEYBOARD */
