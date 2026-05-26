@@ -20,7 +20,15 @@
   <div class="header">
     <div class="top-center">
 
-      <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Byt tema"></button>
+<div class="mode-dots">
+  <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Byt tema"></button>
+
+  <button id="focusToggle"
+          class="focus-toggle"
+          onclick="toggleFocusMode()"
+          aria-label="Focus mode">
+  </button>
+</div>
 
       <div class="clock-block" onclick="location.reload()">
         <div id="time"></div>
@@ -158,7 +166,6 @@
         <input id="timer-time-input" type="time" />
         <button onclick="saveTimer()">Spara timer</button>
         <button onclick="clearTimer()" class="ghost-button">Rensa timer</button>
-        <button onclick="toggleFocusMode()" class="ghost-button">Focus mode på/av</button>
       </div>
     </div>
   </div>
