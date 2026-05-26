@@ -838,6 +838,51 @@ function isTypingTarget(el){
   );
 }
 
+/* TRACKPAD / MOUSE WHEEL DOWN */
+
+let lastWheelTrigger = 0;
+
+document.addEventListener("wheel", e => {
+  const now = Date.now();
+
+  if(now - lastWheelTrigger < 700) return;
+  if(e.deltaY < 35) return;
+
+  const isAtTop = window.scrollY <= 5;
+
+  const menuOpen =
+    !document.getElementById("menuLayer").classList.contains("hidden");
+
+  const viewOpen =
+    !document.getElementById("viewLayer").classList.contains("hidden");
+
+  const detailOpen =
+    !document.getElementById("taskDetail").classList.contains("hidden");
+
+  if(detailOpen){
+    closeTaskDetail();
+    lastWheelTrigger = now;
+    return;
+  }
+
+  if(viewOpen){
+    closeMenuView(true);
+    lastWheelTrigger = now;
+    return;
+  }
+
+  if(menuOpen){
+    closeMenu();
+    lastWheelTrigger = now;
+    return;
+  }
+
+  if(isAtTop){
+    openMenu();
+    lastWheelTrigger = now;
+  }
+}, { passive: true });
+
 document.addEventListener("touchstart", e => {
   if(!e.touches || !e.touches.length) return;
 
