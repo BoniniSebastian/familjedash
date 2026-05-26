@@ -24,8 +24,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let savedScrollY = 0;
-let activeView = null;
-let viewReturnTarget = "home";
 let editingJobId = null;
 let detailTask = null;
 
@@ -271,6 +269,8 @@ function renderTaskItem(type, d){
 
 /* VIEW SYSTEM */
 
+let viewReturnTarget = "home";
+
 window.openMenu = () => {
   document.getElementById("menuLayer").classList.remove("hidden");
   lockPage();
@@ -295,8 +295,6 @@ window.openDashboardView = (view) => {
 };
 
 function openView(view){
-  activeView = view;
-
   document.getElementById("viewLayer").classList.remove("hidden");
   lockPage();
   showCloseButton();
@@ -343,7 +341,6 @@ function openView(view){
 }
 
 window.closeMenuView = (manageClose = true) => {
-  activeView = null;
   closeTaskDetail(false);
 
   document.getElementById("viewLayer").classList.add("hidden");
@@ -579,7 +576,7 @@ window.saveTaskDetail = async () => {
   closeTaskDetail();
 };
 
-/* TIMER / FOCUS MODE */
+/* TIMER */
 
 const timerRef = doc(db, "dashboardTimer", "main");
 let activeTimer = null;
@@ -589,7 +586,6 @@ async function loadTimer(){
 
   if(snap.exists()){
     activeTimer = snap.data();
-    document.body.classList.toggle("focus-mode", !!activeTimer.focusMode);
   }
 
   updateTimerBar();
@@ -644,12 +640,6 @@ function updateTimerBar(){
   if(left <= 0){
     labelEl.textContent = (activeTimer.label || "Timer") + " · NU";
     progressEl.classList.add("danger");
-  } else if(percent < 20){
-    progressEl.classList.add("danger");
-  } else if(percent < 45){
-    progressEl.classList.add("warning");
-  } else {
-    progressEl.classList.add("calm");
   }
 }
 
@@ -670,7 +660,6 @@ window.saveTimer = async () => {
   activeTimer = {
     label,
     time,
-    focusMode: document.body.classList.contains("focus-mode"),
     createdAt: new Date().toISOString(),
     updatedAt: Date.now()
   };
@@ -685,33 +674,10 @@ window.clearTimer = async () => {
   await setDoc(timerRef, {
     label: "",
     time: "",
-    focusMode: false,
     updatedAt: Date.now()
   });
 
-  document.body.classList.remove("focus-mode");
   updateTimerBar();
-};
-
-window.toggleFocusMode = async () => {
-  const isFocus =
-    !document.body.classList.contains("focus-mode");
-
-  document.body.classList.toggle("focus-mode", isFocus);
-
-  if(activeTimer){
-    activeTimer.focusMode = isFocus;
-
-    await setDoc(timerRef, activeTimer);
-  } else {
-
-    await setDoc(timerRef, {
-      label:"",
-      time:"",
-      focusMode:isFocus,
-      updatedAt:Date.now()
-    });
-  }
 };
 
 loadTimer();
@@ -984,9 +950,7 @@ function isTypingTarget(el){
 document.addEventListener("touchstart", e => {
   if(!e.touches || !e.touches.length) return;
 
-  const target = e.target;
-
-  if(isTypingTarget(target)){
+  if(isTypingTarget(e.target)){
     validSwipeStart = false;
     return;
   }
