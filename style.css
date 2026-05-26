@@ -313,7 +313,6 @@ body.light-mode .timer-track{
   transition:width .6s linear;
   background:linear-gradient(90deg,#00cfff,#8b5cff,#ff4da6,#ff8c42);
   background-size:220% 100%;
-  animation:timerFlow 5s linear infinite;
   box-shadow:
     0 0 12px rgba(0,207,255,.7),
     0 0 22px rgba(255,77,166,.45),
@@ -321,7 +320,7 @@ body.light-mode .timer-track{
 }
 
 .timer-progress.danger{
-  animation:timerFlow 5s linear infinite, timerPulse 1s ease-in-out infinite alternate;
+  animation:timerPulse 1s ease-in-out infinite alternate;
 }
 
 @keyframes timerFlow{
