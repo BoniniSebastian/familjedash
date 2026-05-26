@@ -694,13 +694,23 @@ window.clearTimer = async () => {
 };
 
 window.toggleFocusMode = async () => {
-  const isFocus = !document.body.classList.contains("focus-mode");
+  const isFocus =
+    !document.body.classList.contains("focus-mode");
 
   document.body.classList.toggle("focus-mode", isFocus);
 
   if(activeTimer){
     activeTimer.focusMode = isFocus;
+
     await setDoc(timerRef, activeTimer);
+  } else {
+
+    await setDoc(timerRef, {
+      label:"",
+      time:"",
+      focusMode:isFocus,
+      updatedAt:Date.now()
+    });
   }
 };
 
