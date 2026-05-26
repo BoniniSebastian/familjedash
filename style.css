@@ -1061,3 +1061,119 @@ body.light-mode .job-notes{
     font-size:31px;
   }
 }
+/* MODE DOTS */
+
+.mode-dots{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:18px;
+}
+
+.theme-toggle,
+.focus-toggle{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:none;
+  cursor:pointer;
+  padding:0;
+}
+
+.theme-toggle{
+  background:white;
+}
+
+body.light-mode .theme-toggle{
+  background:#050505;
+}
+
+.focus-toggle{
+  background:#00cfff;
+  opacity:.35;
+  transition:.25s ease;
+  box-shadow:0 0 12px rgba(0,207,255,.25);
+}
+
+body.focus-mode .focus-toggle{
+  opacity:1;
+  transform:scale(1.08);
+  box-shadow:
+    0 0 22px rgba(0,207,255,.9),
+    0 0 55px rgba(0,207,255,.45);
+}
+
+/* FULLSCREEN FOCUS */
+
+body.focus-mode::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.62);
+  pointer-events:none;
+  z-index:6;
+}
+
+/* KEEP HEADER + TIMER ABOVE */
+
+.hero,
+.focus-timer,
+.layer-close,
+.menu-layer,
+.view-layer{
+  position:relative;
+  z-index:10;
+}
+
+/* FORCE WHITE HEADER IN FOCUS */
+
+body.focus-mode #time,
+body.focus-mode #date,
+body.focus-mode #weather-main,
+body.focus-mode #weather-feels,
+body.focus-mode #forecast{
+  color:white !important;
+}
+
+/* MULTICOLOR TIMER */
+
+.timer-track{
+  position:relative;
+  overflow:hidden;
+}
+
+.timer-progress{
+  position:absolute;
+  top:0;
+  left:0;
+  height:100%;
+  transition:width .6s linear;
+  background:
+    linear-gradient(
+      90deg,
+      #00cfff 0%,
+      #8b5cff 30%,
+      #ff4da6 60%,
+      #ff8c42 100%
+    );
+
+  background-size:220% 100%;
+
+  animation:timerFlow 5s linear infinite;
+
+  box-shadow:
+    0 0 12px rgba(0,207,255,.7),
+    0 0 22px rgba(255,77,166,.45),
+    0 0 40px rgba(139,92,255,.35);
+}
+
+@keyframes timerFlow{
+  from{
+    background-position:0% 0%;
+  }
+
+  to{
+    background-position:220% 0%;
+  }
+}
+
