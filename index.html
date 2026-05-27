@@ -240,108 +240,49 @@
     <div class="loop-blob loop-blob-3"></div>
   </div>
 
+  <button class="loop-tag-trigger" onclick="toggleLoopTags()">☰</button>
   <button class="loop-close" onclick="close360Loop()">×</button>
 
-  <div class="loop-layout">
+  <aside id="loopSidebar" class="loop-sidebar">
+    <div class="loop-logo">360 LOOP</div>
 
-    <aside class="loop-sidebar">
+    <div class="loop-tag-title">TAGGAR</div>
 
-      <div class="loop-logo">
-        360 LOOP
-      </div>
+    <div id="loopTags" class="loop-tags">
+      <button class="loop-tag active" data-tag="all" onclick="selectLoopTag('all')">Allt</button>
+    </div>
+  </aside>
 
-      <div id="loop-categories" class="loop-categories">
+  <main class="loop-workspace">
 
-        <button class="loop-cat active">
-          Allt
-        </button>
+    <button class="loop-new-sheet" onclick="newLoopSheet()">＋</button>
 
-        <button class="loop-cat">
-          Utveckling
-        </button>
+    <section class="loop-sheet-list">
+      <div class="loop-list-title">Blad</div>
+      <div id="loopSheetList"></div>
+    </section>
 
-        <button class="loop-cat">
-          Jobb
-        </button>
+    <section class="loop-sheet-editor">
 
-        <button class="loop-cat">
-          Familj
-        </button>
+      <div id="loopActiveTags" class="loop-active-tags"></div>
 
-        <button class="loop-cat">
-          Mamma
-        </button>
+      <input
+        id="loopTitle"
+        class="loop-title-input"
+        placeholder="Skriv ett ämne..."
+      />
 
-      </div>
+      <textarea
+        id="loopText"
+        class="loop-textarea"
+        placeholder="Börja skriva... Använd #taggar var som helst."
+      ></textarea>
 
-      <button class="loop-add-category">
-        + Ny kategori
-      </button>
+      <div id="loopSaveStatus" class="loop-save-status">Sparat</div>
 
-    </aside>
+    </section>
 
-    <main class="loop-main">
-
-      <div class="loop-topbar">
-
-        <div class="loop-current-category">
-          Utveckling
-        </div>
-
-        <button class="loop-new-page">
-          + Nytt blad
-        </button>
-
-      </div>
-
-      <div class="loop-pages">
-
-        <div class="loop-page-card active">
-
-          <div class="loop-page-title">
-            AI Dashboard
-          </div>
-
-          <div class="loop-page-preview">
-            Idéer kring realtime-data, actions,
-            trading och visualisering...
-          </div>
-
-        </div>
-
-        <div class="loop-page-card">
-
-          <div class="loop-page-title">
-            FlowSync
-          </div>
-
-          <div class="loop-page-preview">
-            Integrationer, pitchar och
-            kommun-case...
-          </div>
-
-        </div>
-
-      </div>
-
-      <div class="loop-editor">
-
-        <input
-          class="loop-editor-title"
-          placeholder="Titel..."
-          value="AI Dashboard"
-        />
-
-        <textarea
-          class="loop-editor-text"
-          placeholder="Börja skriva..."
-        ></textarea>
-
-      </div>
-
-    </main>
-
-  </div>
+  </main>
 
 </div>
 <script type="module" src="app.js"></script>
