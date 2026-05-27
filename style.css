@@ -1295,3 +1295,200 @@ body.light-mode .job-notes{
   line-height:1.7;
   color:#222;
 }
+/* IPHONE PORTRAIT RESPONSIVE */
+
+@media (max-width:600px){
+
+  .hero{
+    height:170px;
+  }
+
+  .header{
+    padding-top:22px;
+  }
+
+  .top-center{
+    gap:10px;
+    align-items:flex-start;
+  }
+
+  #time{
+    font-size:44px;
+  }
+
+  #date{
+    font-size:12px;
+  }
+
+  .weather-top{
+    margin-top:6px;
+  }
+
+  #weather-icon{
+    font-size:21px;
+  }
+
+  #weather-main{
+    font-size:20px;
+  }
+
+  #weather-feels,
+  #forecast{
+    font-size:10px;
+  }
+
+  .content{
+    padding:0 12px 50px;
+    margin-top:-6px;
+  }
+
+  .main-column{
+    width:100%;
+    min-width:0;
+    max-width:none;
+  }
+
+  .box,
+  .focus-timer{
+    padding:14px;
+    margin-bottom:10px;
+  }
+
+  .today-box{
+    min-height:120px;
+  }
+
+  .remember-box,
+  .notes-box{
+    min-height:160px;
+  }
+
+  .actions-box{
+    min-height:180px;
+  }
+
+  .calendar{
+    height:300px;
+  }
+
+  .menu-shell{
+    top:54px;
+  }
+
+  .menu-shell h1,
+  .menu-list{
+    width:82vw;
+  }
+
+  .menu-shell h1{
+    font-size:32px;
+  }
+
+  .menu-list button{
+    font-size:32px;
+    padding:8px 0;
+    letter-spacing:1.8px;
+  }
+
+  .view-inner,
+  .task-detail-inner{
+    width:88vw;
+  }
+
+  .view-big-title{
+    font-size:28px;
+  }
+
+  .layer-close{
+    width:52px;
+    height:52px;
+    bottom:18px;
+  }
+
+  .loop-layout{
+    flex-direction:column;
+  }
+
+  .loop-sidebar{
+    width:100%;
+    height:auto;
+    padding:22px 16px 12px;
+    border-right:none;
+    border-bottom:1px solid rgba(0,0,0,.08);
+  }
+
+  .loop-logo{
+    font-size:22px;
+    margin-bottom:16px;
+  }
+
+  .loop-categories{
+    flex-direction:row;
+    overflow-x:auto;
+    gap:8px;
+    padding-bottom:6px;
+  }
+
+  .loop-cat{
+    white-space:nowrap;
+    padding:10px 14px;
+    border-radius:999px;
+    font-size:14px;
+  }
+
+  .loop-add-category{
+    margin-top:10px;
+    width:100%;
+  }
+
+  .loop-main{
+    padding:16px;
+  }
+
+  .loop-topbar{
+    margin-bottom:16px;
+  }
+
+  .loop-current-category{
+    font-size:24px;
+  }
+
+  .loop-new-page{
+    padding:10px 14px;
+    border-radius:999px;
+  }
+
+  .loop-pages{
+    gap:10px;
+    margin-bottom:16px;
+  }
+
+  .loop-page-card{
+    min-width:190px;
+    border-radius:18px;
+    padding:14px;
+  }
+
+  .loop-editor{
+    border-radius:22px;
+    padding:18px;
+    min-height:430px;
+  }
+
+  .loop-editor-title{
+    font-size:30px;
+  }
+
+  .loop-editor-text{
+    min-height:330px;
+    font-size:16px;
+  }
+
+  .loop-close{
+    top:14px;
+    right:14px;
+    width:44px;
+    height:44px;
+    font-size:28px;
+  }
+}
