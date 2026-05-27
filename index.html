@@ -88,6 +88,7 @@
     <h1>Meny</h1>
 
     <div class="menu-list">
+      <button onclick="open360Loop()">360 LOOP</button>
       <button onclick="openMenuView('today')">IDAG</button>
       <button onclick="openMenuView('remember')">KOM-IHÅG</button>
       <button onclick="openMenuView('actions')">ACTIONS</button>
@@ -229,6 +230,120 @@
 
 <button id="layerClose" class="layer-close hidden" onclick="closeCurrentLayer()">×</button>
 
+<!-- 360 LOOP -->
+
+<div id="loop360" class="loop360 hidden">
+
+  <div class="loop360-bg">
+    <div class="loop-blob loop-blob-1"></div>
+    <div class="loop-blob loop-blob-2"></div>
+    <div class="loop-blob loop-blob-3"></div>
+  </div>
+
+  <button class="loop-close" onclick="close360Loop()">×</button>
+
+  <div class="loop-layout">
+
+    <aside class="loop-sidebar">
+
+      <div class="loop-logo">
+        360 LOOP
+      </div>
+
+      <div id="loop-categories" class="loop-categories">
+
+        <button class="loop-cat active">
+          Allt
+        </button>
+
+        <button class="loop-cat">
+          Utveckling
+        </button>
+
+        <button class="loop-cat">
+          Jobb
+        </button>
+
+        <button class="loop-cat">
+          Familj
+        </button>
+
+        <button class="loop-cat">
+          Mamma
+        </button>
+
+      </div>
+
+      <button class="loop-add-category">
+        + Ny kategori
+      </button>
+
+    </aside>
+
+    <main class="loop-main">
+
+      <div class="loop-topbar">
+
+        <div class="loop-current-category">
+          Utveckling
+        </div>
+
+        <button class="loop-new-page">
+          + Nytt blad
+        </button>
+
+      </div>
+
+      <div class="loop-pages">
+
+        <div class="loop-page-card active">
+
+          <div class="loop-page-title">
+            AI Dashboard
+          </div>
+
+          <div class="loop-page-preview">
+            Idéer kring realtime-data, actions,
+            trading och visualisering...
+          </div>
+
+        </div>
+
+        <div class="loop-page-card">
+
+          <div class="loop-page-title">
+            FlowSync
+          </div>
+
+          <div class="loop-page-preview">
+            Integrationer, pitchar och
+            kommun-case...
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="loop-editor">
+
+        <input
+          class="loop-editor-title"
+          placeholder="Titel..."
+          value="AI Dashboard"
+        />
+
+        <textarea
+          class="loop-editor-text"
+          placeholder="Börja skriva..."
+        ></textarea>
+
+      </div>
+
+    </main>
+
+  </div>
+
+</div>
 <script type="module" src="app.js"></script>
 
 </body>
