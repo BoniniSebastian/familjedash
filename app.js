@@ -26,11 +26,16 @@ const db = getFirestore(app);
 let savedScrollY = 0;
 let editingJobId = null;
 let detailTask = null;
+let viewReturnTarget = "home";
 
 let unsubscribeRemember = null;
 let unsubscribeActions = null;
 let unsubscribeLinks = null;
 let unsubscribeJobs = null;
+let unsubscribeTodayRemember = null;
+let unsubscribeTodayActions = null;
+let unsubscribeTodayViewRemember = null;
+let unsubscribeTodayViewActions = null;
 
 /* THEME */
 
@@ -68,22 +73,12 @@ function updateClock(){
 updateClock();
 setInterval(updateClock, 1000);
 
-/* IMAGE ROTATION */
+/* STATIC HERO IMAGE */
 
-const imgs = [
-  "assets/foton/Back360.jpeg"
-];
-
-let imgIndex = 0;
 const bg = document.getElementById("image-bg");
-
-function rotate(){
-  bg.style.backgroundImage = `url(${imgs[imgIndex]})`;
-  imgIndex = (imgIndex + 1) % imgs.length;
+if(bg){
+  bg.style.backgroundImage = `url(assets/foton/Back360.jpeg)`;
 }
-
-rotate();
-setInterval(rotate, 60000);
 
 /* PAGE LOCK */
 
@@ -107,7 +102,7 @@ function hideCloseButton(){
   document.getElementById("layerClose").classList.add("hidden");
 }
 
-/* HOME PREVIEWS */
+/* HELPERS */
 
 function getSubtaskMeta(data){
   const subtasks = Array.isArray(data.subtasks) ? data.subtasks : [];
@@ -118,34 +113,51 @@ function getSubtaskMeta(data){
   return `${doneCount} av ${subtasks.length} slutförda`;
 }
 
+function createTodayBadge(type){
+  return type === "komIhag" ? "Kom-ihåg" : "Action";
+}
+
+function itemOrder(data){
+  return typeof data.order === "number" ? data.order : data.createdAt || 0;
+}
+
+/* HOME PREVIEWS */
+
 function bindRememberPreview(){
   const q = query(collection(db, "komIhag"), orderBy("createdAt", "asc"));
 
   onSnapshot(q, snap => {
     const el = document.getElementById("komihag-list");
+    if(!el) return;
+
     el.innerHTML = "";
 
-    snap.forEach(d => {
-      const data = d.data();
-      if(data.done) return;
+    const docs = [];
+    snap.forEach(d => docs.push(d));
 
-      const li = document.createElement("li");
-      if(data.important) li.classList.add("important-dot");
+    docs
+      .sort((a, b) => itemOrder(a.data()) - itemOrder(b.data()))
+      .forEach(d => {
+        const data = d.data();
+        if(data.done) return;
 
-      const title = document.createElement("span");
-      title.textContent = data.text;
-      li.appendChild(title);
+        const li = document.createElement("li");
+        if(data.important) li.classList.add("important-dot");
 
-      const metaText = getSubtaskMeta(data);
-      if(metaText){
-        const meta = document.createElement("div");
-        meta.className = "subtask-count-preview";
-        meta.textContent = metaText;
-        li.appendChild(meta);
-      }
+        const title = document.createElement("span");
+        title.textContent = data.text;
+        li.appendChild(title);
 
-      el.appendChild(li);
-    });
+        const metaText = getSubtaskMeta(data);
+        if(metaText){
+          const meta = document.createElement("div");
+          meta.className = "subtask-count-preview";
+          meta.textContent = metaText;
+          li.appendChild(meta);
+        }
+
+        el.appendChild(li);
+      });
   });
 }
 
@@ -154,33 +166,119 @@ function bindActionsPreview(){
 
   onSnapshot(q, snap => {
     const el = document.getElementById("actions-list");
+    if(!el) return;
+
     el.innerHTML = "";
 
-    snap.forEach(d => {
-      const data = d.data();
-      if(data.done) return;
+    const docs = [];
+    snap.forEach(d => docs.push(d));
 
-      const li = document.createElement("li");
+    docs
+      .sort((a, b) => itemOrder(a.data()) - itemOrder(b.data()))
+      .forEach(d => {
+        const data = d.data();
+        if(data.done) return;
 
-      const title = document.createElement("span");
-      title.textContent = data.text;
-      li.appendChild(title);
+        const li = document.createElement("li");
 
-      const metaText = getSubtaskMeta(data);
-      if(metaText){
-        const meta = document.createElement("div");
-        meta.className = "subtask-count-preview";
-        meta.textContent = metaText;
-        li.appendChild(meta);
-      }
+        const title = document.createElement("span");
+        title.textContent = data.text;
+        li.appendChild(title);
 
-      el.appendChild(li);
-    });
+        const metaText = getSubtaskMeta(data);
+        if(metaText){
+          const meta = document.createElement("div");
+          meta.className = "subtask-count-preview";
+          meta.textContent = metaText;
+          li.appendChild(meta);
+        }
+
+        el.appendChild(li);
+      });
   });
+}
+
+function bindTodayPreview(){
+  const el = document.getElementById("today-list");
+  if(!el) return;
+
+  const state = {
+    komIhag: [],
+    attGora: []
+  };
+
+  function render(){
+    el.innerHTML = "";
+
+    const combined = [
+      ...state.komIhag.map(item => ({ ...item, type: "komIhag" })),
+      ...state.attGora.map(item => ({ ...item, type: "attGora" }))
+    ];
+
+    combined
+      .sort((a, b) => itemOrder(a) - itemOrder(b))
+      .forEach(item => {
+        const li = document.createElement("li");
+
+        if(item.done){
+          li.classList.add("today-done");
+        }
+
+        const title = document.createElement("span");
+        title.textContent = item.text;
+
+        const source = document.createElement("div");
+        source.className = "today-source";
+        source.textContent = createTodayBadge(item.type);
+
+        li.appendChild(title);
+        li.appendChild(source);
+
+        el.appendChild(li);
+      });
+  }
+
+  if(unsubscribeTodayRemember) unsubscribeTodayRemember();
+  if(unsubscribeTodayActions) unsubscribeTodayActions();
+
+  unsubscribeTodayRemember = onSnapshot(
+    query(collection(db, "komIhag"), orderBy("createdAt", "asc")),
+    snap => {
+      state.komIhag = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if(data.today){
+          state.komIhag.push({
+            id: d.id,
+            ...data
+          });
+        }
+      });
+      render();
+    }
+  );
+
+  unsubscribeTodayActions = onSnapshot(
+    query(collection(db, "attGora"), orderBy("createdAt", "asc")),
+    snap => {
+      state.attGora = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if(data.today){
+          state.attGora.push({
+            id: d.id,
+            ...data
+          });
+        }
+      });
+      render();
+    }
+  );
 }
 
 bindRememberPreview();
 bindActionsPreview();
+bindTodayPreview();
 
 /* TASK ITEMS */
 
@@ -190,7 +288,10 @@ function renderTaskItem(type, d){
 
   const li = document.createElement("li");
   li.className = "task-item";
-  if(data.done) li.classList.add("done-item");
+
+  if(data.done){
+    li.classList.add("done-item");
+  }
 
   const row = document.createElement("div");
   row.className = "task-top-row";
@@ -204,6 +305,7 @@ function renderTaskItem(type, d){
 
   check.onclick = async (e) => {
     e.stopPropagation();
+
     await updateDoc(doc(db, type, d.id), {
       done: !data.done
     });
@@ -215,18 +317,34 @@ function renderTaskItem(type, d){
   const title = document.createElement("span");
   title.textContent = data.text;
 
-  const meta = document.createElement("div");
-  meta.className = "task-meta";
-  meta.textContent = metaText;
-
   textWrap.appendChild(title);
-  if(metaText) textWrap.appendChild(meta);
+
+  if(metaText){
+    const meta = document.createElement("div");
+    meta.className = "task-meta";
+    meta.textContent = metaText;
+    textWrap.appendChild(meta);
+  }
 
   left.appendChild(check);
   left.appendChild(textWrap);
 
   const controls = document.createElement("div");
   controls.className = "task-controls";
+
+  const todayBtn = document.createElement("button");
+  todayBtn.className = data.today ? "today-btn active" : "today-btn";
+  todayBtn.textContent = "!";
+
+  todayBtn.onclick = async (e) => {
+    e.stopPropagation();
+
+    await updateDoc(doc(db, type, d.id), {
+      today: !data.today
+    });
+  };
+
+  controls.appendChild(todayBtn);
 
   if(type === "komIhag"){
     const important = document.createElement("button");
@@ -235,6 +353,7 @@ function renderTaskItem(type, d){
 
     important.onclick = async (e) => {
       e.stopPropagation();
+
       await updateDoc(doc(db, type, d.id), {
         important: !data.important
       });
@@ -256,6 +375,7 @@ function renderTaskItem(type, d){
 
   row.appendChild(left);
   row.appendChild(controls);
+
   li.appendChild(row);
 
   li.onclick = () => openTaskDetail(type, d.id, data);
@@ -264,8 +384,6 @@ function renderTaskItem(type, d){
 }
 
 /* VIEW SYSTEM */
-
-let viewReturnTarget = "home";
 
 window.openMenu = () => {
   document.getElementById("menuLayer").classList.remove("hidden");
@@ -300,6 +418,11 @@ function openView(view){
   });
 
   closeTaskDetail(false);
+
+  if(view === "today"){
+    document.getElementById("todayView").classList.remove("hidden");
+    bindTodayView();
+  }
 
   if(view === "calendar"){
     document.getElementById("calendarView").classList.remove("hidden");
@@ -367,7 +490,7 @@ window.closeCurrentLayer = () => {
     !document.getElementById("menuLayer").classList.contains("hidden");
 
   if(detailOpen){
-    closeTaskDetail(true);
+    closeTaskDetail();
     return;
   }
 
@@ -382,11 +505,163 @@ window.closeCurrentLayer = () => {
   }
 };
 
+/* TODAY VIEW */
+
+function createTodayViewItem(type, d){
+  const data = d.data();
+
+  const li = document.createElement("li");
+  if(data.done){
+    li.classList.add("done-item");
+  }
+
+  const row = document.createElement("div");
+  row.className = "task-top-row";
+
+  const left = document.createElement("div");
+  left.className = "popup-item-left";
+
+  const check = document.createElement("button");
+  check.className = data.done ? "check checked" : "check";
+  check.textContent = data.done ? "✓" : "";
+
+  check.onclick = async (e) => {
+    e.stopPropagation();
+
+    await updateDoc(doc(db, type, d.id), {
+      done: !data.done
+    });
+  };
+
+  const textWrap = document.createElement("div");
+  textWrap.className = "task-text-wrap";
+
+  const title = document.createElement("span");
+  title.textContent = data.text;
+
+  const source = document.createElement("div");
+  source.className = "task-meta";
+  source.textContent = createTodayBadge(type);
+
+  textWrap.appendChild(title);
+  textWrap.appendChild(source);
+
+  left.appendChild(check);
+  left.appendChild(textWrap);
+
+  const controls = document.createElement("div");
+  controls.className = "task-controls";
+
+  const rocket = document.createElement("button");
+  rocket.className = "rocket-btn";
+  rocket.textContent = "🚀";
+
+  rocket.onclick = async (e) => {
+    e.stopPropagation();
+
+    await updateDoc(doc(db, type, d.id), {
+      today: false
+    });
+  };
+
+  controls.appendChild(rocket);
+
+  row.appendChild(left);
+  row.appendChild(controls);
+  li.appendChild(row);
+
+  li.onclick = () => openTaskDetail(type, d.id, data);
+
+  return li;
+}
+
+function bindTodayView(){
+  const active = document.getElementById("today-active");
+  const done = document.getElementById("today-done");
+
+  if(!active || !done) return;
+
+  const state = {
+    komIhag: [],
+    attGora: []
+  };
+
+  function render(){
+    active.innerHTML = "";
+    done.innerHTML = "";
+
+    const combined = [
+      ...state.komIhag.map(item => ({ ...item, type: "komIhag" })),
+      ...state.attGora.map(item => ({ ...item, type: "attGora" }))
+    ];
+
+    combined
+      .sort((a, b) => itemOrder(a) - itemOrder(b))
+      .forEach(item => {
+        const fakeDoc = {
+          id: item.id,
+          data: () => item
+        };
+
+        const el = createTodayViewItem(item.type, fakeDoc);
+
+        if(item.done){
+          done.appendChild(el);
+        } else {
+          active.appendChild(el);
+        }
+      });
+  }
+
+  if(unsubscribeTodayViewRemember) unsubscribeTodayViewRemember();
+  if(unsubscribeTodayViewActions) unsubscribeTodayViewActions();
+
+  unsubscribeTodayViewRemember = onSnapshot(
+    query(collection(db, "komIhag"), orderBy("createdAt", "asc")),
+    snap => {
+      state.komIhag = [];
+
+      snap.forEach(d => {
+        const data = d.data();
+        if(data.today){
+          state.komIhag.push({
+            id: d.id,
+            ...data
+          });
+        }
+      });
+
+      render();
+    }
+  );
+
+  unsubscribeTodayViewActions = onSnapshot(
+    query(collection(db, "attGora"), orderBy("createdAt", "asc")),
+    snap => {
+      state.attGora = [];
+
+      snap.forEach(d => {
+        const data = d.data();
+        if(data.today){
+          state.attGora.push({
+            id: d.id,
+            ...data
+          });
+        }
+      });
+
+      render();
+    }
+  );
+}
+
 /* REMEMBER / ACTIONS */
 
 function bindRememberView(){
   const activeList = document.getElementById("remember-active");
   const doneList = document.getElementById("remember-done");
+
+  if(!activeList || !doneList) return;
 
   if(unsubscribeRemember) unsubscribeRemember();
 
@@ -396,22 +671,29 @@ function bindRememberView(){
     activeList.innerHTML = "";
     doneList.innerHTML = "";
 
-    snap.forEach(d => {
-      const data = d.data();
-      const item = renderTaskItem("komIhag", d);
+    const docs = [];
+    snap.forEach(d => docs.push(d));
 
-      if(data.done){
-        doneList.appendChild(item);
-      } else {
-        activeList.appendChild(item);
-      }
-    });
+    docs
+      .sort((a, b) => itemOrder(a.data()) - itemOrder(b.data()))
+      .forEach(d => {
+        const data = d.data();
+        const item = renderTaskItem("komIhag", d);
+
+        if(data.done){
+          doneList.appendChild(item);
+        } else {
+          activeList.appendChild(item);
+        }
+      });
   });
 }
 
 function bindActionsView(){
   const activeList = document.getElementById("actions-active");
   const doneList = document.getElementById("actions-done");
+
+  if(!activeList || !doneList) return;
 
   if(unsubscribeActions) unsubscribeActions();
 
@@ -421,29 +703,36 @@ function bindActionsView(){
     activeList.innerHTML = "";
     doneList.innerHTML = "";
 
-    snap.forEach(d => {
-      const data = d.data();
-      const item = renderTaskItem("attGora", d);
+    const docs = [];
+    snap.forEach(d => docs.push(d));
 
-      if(data.done){
-        doneList.appendChild(item);
-      } else {
-        activeList.appendChild(item);
-      }
-    });
+    docs
+      .sort((a, b) => itemOrder(a.data()) - itemOrder(b.data()))
+      .forEach(d => {
+        const data = d.data();
+        const item = renderTaskItem("attGora", d);
+
+        if(data.done){
+          doneList.appendChild(item);
+        } else {
+          activeList.appendChild(item);
+        }
+      });
   });
 }
 
 window.addViewItem = async (collectionName, inputId) => {
   const input = document.getElementById(inputId);
 
-  if(!input.value.trim()) return;
+  if(!input || !input.value.trim()) return;
 
   await addDoc(collection(db, collectionName), {
     text: input.value.trim(),
     createdAt: Date.now(),
+    order: Date.now(),
     done: false,
     important: false,
+    today: false,
     subtasks: []
   });
 
@@ -463,16 +752,28 @@ function openTaskDetail(type, id, data){
     }
   };
 
-  document.getElementById("detail-title-input").value = detailTask.data.text || "";
+  document.getElementById("detail-title-input").value =
+    detailTask.data.text || "";
 
   const importantBtn = document.getElementById("detail-important");
 
   if(type === "komIhag"){
     importantBtn.classList.remove("hidden");
-    importantBtn.textContent = detailTask.data.important ? "Viktig markerad" : "Gör viktig";
+    importantBtn.textContent =
+      detailTask.data.important ? "Viktig markerad" : "Gör viktig";
+
     importantBtn.classList.toggle("active", !!detailTask.data.important);
   } else {
     importantBtn.classList.add("hidden");
+  }
+
+  const todayBtn = document.getElementById("detail-today");
+
+  if(todayBtn){
+    todayBtn.classList.toggle("active", !!detailTask.data.today);
+
+    todayBtn.textContent =
+      detailTask.data.today ? "I IDAG" : "Lägg till IDAG";
   }
 
   renderDetailSubtasks();
@@ -495,8 +796,26 @@ window.toggleDetailImportant = () => {
   detailTask.data.important = !detailTask.data.important;
 
   const btn = document.getElementById("detail-important");
-  btn.textContent = detailTask.data.important ? "Viktig markerad" : "Gör viktig";
+
+  btn.textContent =
+    detailTask.data.important ? "Viktig markerad" : "Gör viktig";
+
   btn.classList.toggle("active", !!detailTask.data.important);
+};
+
+window.toggleDetailToday = () => {
+  if(!detailTask) return;
+
+  detailTask.data.today = !detailTask.data.today;
+
+  const btn = document.getElementById("detail-today");
+
+  if(btn){
+    btn.classList.toggle("active", !!detailTask.data.today);
+
+    btn.textContent =
+      detailTask.data.today ? "I IDAG" : "Lägg till IDAG";
+  }
 };
 
 function renderDetailSubtasks(){
@@ -507,14 +826,17 @@ function renderDetailSubtasks(){
 
   detailTask.data.subtasks.forEach((sub, index) => {
     const li = document.createElement("li");
-    li.className = sub.done ? "subtask detail-subtask done-subtask" : "subtask detail-subtask";
+    li.className =
+      sub.done ? "subtask detail-subtask done-subtask" : "subtask detail-subtask";
 
     const check = document.createElement("button");
     check.className = sub.done ? "sub-check checked" : "sub-check";
     check.textContent = sub.done ? "✓" : "";
 
     check.onclick = () => {
-      detailTask.data.subtasks[index].done = !detailTask.data.subtasks[index].done;
+      detailTask.data.subtasks[index].done =
+        !detailTask.data.subtasks[index].done;
+
       renderDetailSubtasks();
     };
 
@@ -526,7 +848,9 @@ function renderDetailSubtasks(){
     del.textContent = "×";
 
     del.onclick = () => {
-      detailTask.data.subtasks = detailTask.data.subtasks.filter((_, i) => i !== index);
+      detailTask.data.subtasks =
+        detailTask.data.subtasks.filter((_, i) => i !== index);
+
       renderDetailSubtasks();
     };
 
@@ -563,11 +887,17 @@ window.saveTaskDetail = async () => {
 
   if(!title) return;
 
-  await updateDoc(doc(db, detailTask.type, detailTask.id), {
+  const payload = {
     text: title,
-    important: !!detailTask.data.important,
+    today: !!detailTask.data.today,
     subtasks: detailTask.data.subtasks
-  });
+  };
+
+  if(detailTask.type === "komIhag"){
+    payload.important = !!detailTask.data.important;
+  }
+
+  await updateDoc(doc(db, detailTask.type, detailTask.id), payload);
 
   closeTaskDetail();
 };
@@ -623,9 +953,8 @@ function updateTimerBar(){
   const total = target - createdAt;
   const left = target - now;
 
-  const percent = total > 0
-    ? Math.max(0, Math.min(100, (left / total) * 100))
-    : 0;
+  const percent =
+    total > 0 ? Math.max(0, Math.min(100, (left / total) * 100)) : 0;
 
   timeEl.textContent = activeTimer.time;
   labelEl.textContent = activeTimer.label || "Timer";
@@ -661,6 +990,7 @@ window.saveTimer = async () => {
   };
 
   await setDoc(timerRef, activeTimer);
+
   updateTimerBar();
 };
 
@@ -689,8 +1019,11 @@ async function loadNote(){
   if(snap.exists()){
     const text = snap.data().text || "";
 
-    document.getElementById("notes-preview").textContent =
-      text.trim() ? text : "Tryck för att skriva.";
+    const preview = document.getElementById("notes-preview");
+
+    if(preview){
+      preview.textContent = text.trim() ? text : "Tryck för att skriva.";
+    }
   }
 }
 
@@ -713,8 +1046,11 @@ window.saveNote = async () => {
     updatedAt: Date.now()
   });
 
-  document.getElementById("notes-preview").textContent =
-    text.trim() ? text : "Tryck för att skriva.";
+  const preview = document.getElementById("notes-preview");
+
+  if(preview){
+    preview.textContent = text.trim() ? text : "Tryck för att skriva.";
+  }
 };
 
 loadNote();
@@ -723,6 +1059,7 @@ loadNote();
 
 function normalizeUrl(url){
   if(!url) return "";
+
   const trimmed = url.trim();
 
   if(trimmed.startsWith("http://") || trimmed.startsWith("https://")){
@@ -734,6 +1071,8 @@ function normalizeUrl(url){
 
 function bindLinksView(){
   const list = document.getElementById("links-list");
+
+  if(!list) return;
 
   if(unsubscribeLinks) unsubscribeLinks();
 
@@ -786,6 +1125,7 @@ function bindLinksView(){
       const del = document.createElement("button");
       del.className = "delete-btn";
       del.textContent = "Ta bort";
+
       del.onclick = () => deleteDoc(doc(db, "lankar", d.id));
 
       controls.appendChild(edit);
@@ -823,6 +1163,7 @@ window.addLink = async () => {
 
 function clearJobForm(){
   editingJobId = null;
+
   document.getElementById("job-company-input").value = "";
   document.getElementById("job-status-input").value = "";
   document.getElementById("job-notes-input").value = "";
@@ -830,6 +1171,8 @@ function clearJobForm(){
 
 function bindJobsView(){
   const list = document.getElementById("jobs-list");
+
+  if(!list) return;
 
   if(unsubscribeJobs) unsubscribeJobs();
 
@@ -871,15 +1214,18 @@ function bindJobsView(){
 
       edit.onclick = () => {
         editingJobId = d.id;
+
         document.getElementById("job-company-input").value = data.company || "";
         document.getElementById("job-status-input").value = data.status || "";
         document.getElementById("job-notes-input").value = data.notes || "";
+
         document.getElementById("job-company-input").focus();
       };
 
       const del = document.createElement("button");
       del.className = "delete-btn";
       del.textContent = "Ta bort";
+
       del.onclick = () => deleteDoc(doc(db, "jobbsokaren", d.id));
 
       controls.appendChild(edit);
@@ -892,6 +1238,7 @@ function bindJobsView(){
       }
 
       li.appendChild(controls);
+
       list.appendChild(li);
     });
   });
@@ -963,10 +1310,7 @@ document.addEventListener("touchstart", e => {
   const pageIsAtTop =
     window.scrollY <= 5;
 
-  validSwipeStart =
-    menuOpen ||
-    viewOpen ||
-    pageIsAtTop;
+  validSwipeStart = menuOpen || viewOpen || pageIsAtTop;
 
 }, { passive: true });
 
@@ -1120,7 +1464,8 @@ async function loadWeather(){
   document.getElementById("weather-icon").textContent = icon;
   document.getElementById("weather-main").textContent = temp + "°";
   document.getElementById("weather-feels").textContent = "Känns som " + temp + "°";
-  document.getElementById("forecast").textContent = "Max " + max + "° / Min " + min + "°";
+  document.getElementById("forecast").textContent =
+    "Max " + max + "° / Min " + min + "°";
 }
 
 loadWeather();
@@ -1130,303 +1475,3 @@ loadWeather();
 setInterval(() => {
   location.reload();
 }, 180000);
-/* LINKS */
-
-function normalizeUrl(url){
-
-  if(!url) return "";
-
-  const trimmed =
-    url.trim();
-
-  if(
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("https://")
-  ){
-    return trimmed;
-  }
-
-  return "https://" + trimmed;
-}
-
-function bindLinksView(){
-
-  const list =
-    document.getElementById("links-list");
-
-  if(unsubscribeLinks){
-    unsubscribeLinks();
-  }
-
-  const q = query(
-    collection(db,"lankar"),
-    orderBy("createdAt","asc")
-  );
-
-  unsubscribeLinks = onSnapshot(q, snap => {
-
-    list.innerHTML = "";
-
-    snap.forEach(d => {
-
-      const data = d.data();
-
-      const li = document.createElement("li");
-      li.className = "link-item";
-
-      const left = document.createElement("div");
-
-      const a = document.createElement("a");
-      a.href = normalizeUrl(data.url);
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.textContent = data.title || data.url;
-
-      const urlText = document.createElement("div");
-      urlText.className = "link-url";
-      urlText.textContent = data.url;
-
-      left.appendChild(a);
-      left.appendChild(urlText);
-
-      const controls = document.createElement("div");
-      controls.className = "task-controls";
-
-      const edit = document.createElement("button");
-      edit.className = "delete-btn";
-      edit.textContent = "Ändra";
-
-      edit.onclick = async () => {
-
-        const newTitle =
-          prompt("Namn", data.title || "");
-
-        if(newTitle === null) return;
-
-        const newUrl =
-          prompt("URL", data.url || "");
-
-        if(newUrl === null) return;
-
-        await updateDoc(
-          doc(db,"lankar",d.id),
-          {
-            title:newTitle.trim(),
-            url:newUrl.trim()
-          }
-        );
-      };
-
-      const del = document.createElement("button");
-      del.className = "delete-btn";
-      del.textContent = "Ta bort";
-
-      del.onclick = () =>
-        deleteDoc(doc(db,"lankar",d.id));
-
-      controls.appendChild(edit);
-      controls.appendChild(del);
-
-      li.appendChild(left);
-      li.appendChild(controls);
-
-      list.appendChild(li);
-    });
-  });
-}
-
-window.addLink = async () => {
-
-  const titleInput =
-    document.getElementById("link-title-input");
-
-  const urlInput =
-    document.getElementById("link-url-input");
-
-  const title =
-    titleInput.value.trim();
-
-  const url =
-    urlInput.value.trim();
-
-  if(!title || !url) return;
-
-  await addDoc(
-    collection(db,"lankar"),
-    {
-      title,
-      url,
-      createdAt:Date.now()
-    }
-  );
-
-  titleInput.value = "";
-  urlInput.value = "";
-  titleInput.focus();
-};
-
-/* JOBS */
-
-function clearJobForm(){
-
-  editingJobId = null;
-
-  document
-    .getElementById("job-company-input")
-    .value = "";
-
-  document
-    .getElementById("job-status-input")
-    .value = "";
-
-  document
-    .getElementById("job-notes-input")
-    .value = "";
-}
-
-function bindJobsView(){
-
-  const list =
-    document.getElementById("jobs-list");
-
-  if(unsubscribeJobs){
-    unsubscribeJobs();
-  }
-
-  const q = query(
-    collection(db,"jobbsokaren"),
-    orderBy("createdAt","desc")
-  );
-
-  unsubscribeJobs = onSnapshot(q, snap => {
-
-    list.innerHTML = "";
-
-    snap.forEach(d => {
-
-      const data = d.data();
-
-      const li = document.createElement("li");
-      li.className = "job-item";
-
-      const top = document.createElement("div");
-      top.className = "job-top";
-
-      const company = document.createElement("div");
-      company.className = "job-company";
-      company.textContent =
-        data.company || "Utan företag";
-
-      const status = document.createElement("div");
-      status.className = "job-status";
-      status.textContent =
-        data.status || "Ingen status";
-
-      top.appendChild(company);
-      top.appendChild(status);
-
-      const notes = document.createElement("div");
-      notes.className = "job-notes";
-      notes.textContent = data.notes || "";
-
-      const controls = document.createElement("div");
-      controls.className = "task-controls job-controls";
-
-      const edit = document.createElement("button");
-      edit.className = "delete-btn";
-      edit.textContent = "Ändra";
-
-      edit.onclick = () => {
-
-        editingJobId = d.id;
-
-        document
-          .getElementById("job-company-input")
-          .value = data.company || "";
-
-        document
-          .getElementById("job-status-input")
-          .value = data.status || "";
-
-        document
-          .getElementById("job-notes-input")
-          .value = data.notes || "";
-
-        document
-          .getElementById("job-company-input")
-          .focus();
-      };
-
-      const del = document.createElement("button");
-      del.className = "delete-btn";
-      del.textContent = "Ta bort";
-
-      del.onclick = () =>
-        deleteDoc(doc(db,"jobbsokaren",d.id));
-
-      controls.appendChild(edit);
-      controls.appendChild(del);
-
-      li.appendChild(top);
-
-      if(data.notes){
-        li.appendChild(notes);
-      }
-
-      li.appendChild(controls);
-
-      list.appendChild(li);
-    });
-  });
-}
-
-window.saveJob = async () => {
-
-  const company =
-    document
-      .getElementById("job-company-input")
-      .value
-      .trim();
-
-  const status =
-    document
-      .getElementById("job-status-input")
-      .value
-      .trim();
-
-  const notes =
-    document
-      .getElementById("job-notes-input")
-      .value
-      .trim();
-
-  if(!company && !status && !notes) return;
-
-  if(editingJobId){
-
-    await updateDoc(
-      doc(db,"jobbsokaren",editingJobId),
-      {
-        company,
-        status,
-        notes,
-        updatedAt:Date.now()
-      }
-    );
-
-  } else {
-
-    await addDoc(
-      collection(db,"jobbsokaren"),
-      {
-        company,
-        status,
-        notes,
-        createdAt:Date.now(),
-        updatedAt:Date.now()
-      }
-    );
-  }
-
-  clearJobForm();
-};
