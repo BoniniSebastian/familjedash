@@ -1470,11 +1470,7 @@ async function loadWeather(){
 
 loadWeather();
 
-/* AUTO REFRESH */
 
-setInterval(() => {
-  location.reload();
-}, 180000);
 /* 360 LOOP V1 */
 
 const loopDefaultSheets = [
