@@ -53,6 +53,11 @@
       </div>
     </div>
 
+    <div class="box today-box" onclick="openDashboardView('today')">
+      <div class="card-title">IDAG</div>
+      <ul id="today-list"></ul>
+    </div>
+
     <div class="box remember-box" onclick="openDashboardView('remember')">
       <div class="card-title">Kom-ihåg</div>
       <ul id="komihag-list"></ul>
@@ -83,13 +88,13 @@
     <h1>Meny</h1>
 
     <div class="menu-list">
+      <button onclick="openMenuView('today')">IDAG</button>
       <button onclick="openMenuView('remember')">KOM-IHÅG</button>
       <button onclick="openMenuView('actions')">ACTIONS</button>
       <button onclick="openMenuView('calendar')">KALENDER</button>
       <button onclick="openMenuView('links')">LÄNKAR</button>
       <button onclick="openMenuView('jobs')">JOBBSÖKAREN</button>
-      <button class="disabled">KOMMER SNART</button>
-      <button class="disabled">KOMMER SNART</button>
+      <button class="disabled">360 LOOP</button>
     </div>
   </div>
 </div>
@@ -101,6 +106,18 @@
       class="calendar-full"
       src="https://calendar.google.com/calendar/embed?mode=AGENDA&src=ericssonbonini%40gmail.com&ctz=Europe%2FStockholm">
     </iframe>
+  </div>
+
+  <div id="todayView" class="menu-view hidden">
+    <div class="view-inner">
+      <div class="view-big-title">IDAG</div>
+
+      <div class="section-label">Aktiva</div>
+      <ul id="today-active"></ul>
+
+      <div class="section-label done-title">Slutförda</div>
+      <ul id="today-done"></ul>
+    </div>
   </div>
 
   <div id="rememberView" class="menu-view hidden">
@@ -191,7 +208,10 @@
     <div class="task-detail-inner">
       <input id="detail-title-input" class="detail-title-input" placeholder="Rubrik" />
 
-      <button id="detail-important" class="detail-important hidden" onclick="toggleDetailImportant()">Gör viktig</button>
+      <div class="detail-actions">
+        <button id="detail-important" class="detail-important hidden" onclick="toggleDetailImportant()">Gör viktig</button>
+        <button id="detail-today" class="detail-important" onclick="toggleDetailToday()">Lägg till IDAG</button>
+      </div>
 
       <div class="section-label">Delmål</div>
       <ul id="detail-subtasks"></ul>
