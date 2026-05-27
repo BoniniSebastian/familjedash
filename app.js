@@ -1702,7 +1702,8 @@ window.selectLoopTag = (tag) => {
     ? loopSheets
     : loopSheets.filter(sheet => (sheet.tags || []).includes(tag));
 
-  if(filtered.length && !filtered.some(s => s.id === loopActiveSheetId)){
+  if(filtered.length){
+    filtered.sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     loopActiveSheetId = filtered[0].id;
   }
 
