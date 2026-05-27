@@ -71,11 +71,7 @@ setInterval(updateClock, 1000);
 /* IMAGE ROTATION */
 
 const imgs = [
-  "assets/foton/1.jpg",
-  "assets/foton/2.jpg",
-  "assets/foton/3.jpg",
-  "assets/foton/4.jpg",
-  "assets/foton/5.jpg"
+  "assets/foton/Back360.jpeg"
 ];
 
 let imgIndex = 0;
