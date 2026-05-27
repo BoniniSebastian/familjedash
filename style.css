@@ -1143,17 +1143,17 @@ body.light-mode .job-notes{
 .loop-tag-trigger{
   display:block;
   position:absolute;
-  top:22px;
+  top:14px;
   left:14px;
-  width:46px;
-  height:46px;
+  width:42px;
+  height:42px;
   border:none;
   border-radius:50%;
   background:rgba(255,255,255,.68);
   backdrop-filter:blur(16px);
-  font-size:22px;
+  font-size:18px;
   cursor:pointer;
-  z-index:8;
+  z-index:20;
   box-shadow:0 14px 40px rgba(0,0,0,.10);
 }
 
@@ -1223,18 +1223,19 @@ body.light-mode .job-notes{
 }
 
 .loop-new-sheet{
-  top:22px;
-  left:66px;
-  width:42px;
-  height:42px;
+  position:absolute;
+  left:18px;
+  bottom:18px;
+  width:52px;
+  height:52px;
   border:none;
   border-radius:50%;
   background:#111;
   color:white;
-  font-size:27px;
+  font-size:28px;
   line-height:1;
   cursor:pointer;
-  z-index:3;
+  z-index:20;
   box-shadow:0 14px 35px rgba(0,0,0,.18);
 }
 
