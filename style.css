@@ -1362,8 +1362,8 @@ body.light-mode .job-notes{
   }
 
   .loop-new-sheet{
-    top:24px;
-    left:82px;
+    left:18px;
+    bottom:18px;
     width:46px;
     height:46px;
   }
