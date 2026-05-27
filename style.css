@@ -1141,10 +1141,10 @@ body.light-mode .job-notes{
 }
 
 .loop-tag-trigger{
-  display:none;
+  display:block;
   position:absolute;
   top:22px;
-  left:22px;
+  left:14px;
   width:46px;
   height:46px;
   border:none;
@@ -1223,9 +1223,8 @@ body.light-mode .job-notes{
 }
 
 .loop-new-sheet{
-  position:absolute;
-  top:28px;
-  left:34px;
+  top:22px;
+  left:66px;
   width:42px;
   height:42px;
   border:none;
