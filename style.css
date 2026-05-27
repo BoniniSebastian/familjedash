@@ -1143,18 +1143,21 @@ body.light-mode .job-notes{
 .loop-tag-trigger{
   display:block;
   position:absolute;
-  top:14px;
-  left:14px;
-  width:42px;
-  height:42px;
+  top:118px;
+  left:28px;
+  width:46px;
+  height:46px;
   border:none;
   border-radius:50%;
   background:rgba(255,255,255,.68);
   backdrop-filter:blur(16px);
-  font-size:18px;
+  font-size:22px;
   cursor:pointer;
   z-index:20;
   box-shadow:0 14px 40px rgba(0,0,0,.10);
+}
+.loop360.tags-open .loop-tag-trigger{
+  display:none;
 }
 
 .loop-sidebar{
@@ -1224,8 +1227,8 @@ body.light-mode .job-notes{
 
 .loop-new-sheet{
   position:absolute;
-  left:18px;
-  bottom:18px;
+  left:28px;
+  bottom:36px;
   width:52px;
   height:52px;
   border:none;
