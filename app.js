@@ -1475,24 +1475,277 @@ loadWeather();
 setInterval(() => {
   location.reload();
 }, 180000);
-/* 360 LOOP */
+/* 360 LOOP V1 */
+
+const loopDefaultSheets = [
+  {
+    id:"local-first",
+    title:"",
+    text:"",
+    createdAt:Date.now(),
+    updatedAt:Date.now()
+  }
+];
+
+let loopSheets = [...loopDefaultSheets];
+let loopActiveSheetId = "local-first";
+let loopActiveTag = "all";
+let loopSaveTimer = null;
+
+function normalizeLoopTag(tag){
+  return tag
+    .replace("#","")
+    .trim()
+    .toLowerCase();
+}
+
+function formatLoopTag(tag){
+  if(tag === "all") return "Allt";
+  return tag.charAt(0).toUpperCase() + tag.slice(1);
+}
+
+function extractLoopTags(title,text){
+  const source = `${title || ""} ${text || ""}`;
+  const matches = source.match(/#[a-zA-ZåäöÅÄÖ0-9_-]+/g) || [];
+
+  const tags = matches
+    .map(t => normalizeLoopTag(t))
+    .filter(Boolean)
+    .filter(t => t !== "action");
+
+  return [...new Set(tags)].sort((a,b) => a.localeCompare(b,"sv"));
+}
+
+function getActiveLoopSheet(){
+  return loopSheets.find(s => s.id === loopActiveSheetId) || loopSheets[0];
+}
+
+function getLoopPreview(text){
+  const clean = (text || "")
+    .replace(/#[a-zA-ZåäöÅÄÖ0-9_-]+/g,"")
+    .trim();
+
+  return clean ? clean.slice(0,90) : "Tomt blad";
+}
+
+function getAllLoopTags(){
+  const tags = [];
+
+  loopSheets.forEach(sheet => {
+    (sheet.tags || []).forEach(tag => {
+      if(!tags.includes(tag)) tags.push(tag);
+    });
+  });
+
+  return tags.sort((a,b) => a.localeCompare(b,"sv"));
+}
+
+function renderLoopTags(){
+  const wrap = document.getElementById("loopTags");
+  if(!wrap) return;
+
+  wrap.innerHTML = "";
+
+  const allBtn = document.createElement("button");
+  allBtn.className = loopActiveTag === "all" ? "loop-tag active" : "loop-tag";
+  allBtn.textContent = "Allt";
+  allBtn.onclick = () => selectLoopTag("all");
+  wrap.appendChild(allBtn);
+
+  getAllLoopTags().forEach(tag => {
+    const btn = document.createElement("button");
+    btn.className = loopActiveTag === tag ? "loop-tag active" : "loop-tag";
+    btn.textContent = formatLoopTag(tag);
+    btn.onclick = () => selectLoopTag(tag);
+    wrap.appendChild(btn);
+  });
+}
+
+function renderLoopActiveTags(){
+  const wrap = document.getElementById("loopActiveTags");
+  if(!wrap) return;
+
+  const sheet = getActiveLoopSheet();
+
+  wrap.innerHTML = "";
+
+  (sheet.tags || []).forEach(tag => {
+    const pill = document.createElement("button");
+    pill.className = "loop-pill";
+    pill.textContent = "#" + formatLoopTag(tag);
+    pill.onclick = () => selectLoopTag(tag);
+    wrap.appendChild(pill);
+  });
+}
+
+function renderLoopSheetList(){
+  const list = document.getElementById("loopSheetList");
+  if(!list) return;
+
+  list.innerHTML = "";
+
+  let filtered = loopSheets;
+
+  if(loopActiveTag !== "all"){
+    filtered = loopSheets.filter(sheet =>
+      (sheet.tags || []).includes(loopActiveTag)
+    );
+  }
+
+  filtered
+    .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+    .forEach(sheet => {
+      const row = document.createElement("div");
+      row.className = sheet.id === loopActiveSheetId ? "loop-sheet-row active" : "loop-sheet-row";
+
+      const title = document.createElement("div");
+      title.className = "loop-sheet-row-title";
+      title.textContent = sheet.title.trim() || "Namnlöst blad";
+
+      const preview = document.createElement("div");
+      preview.className = "loop-sheet-row-preview";
+      preview.textContent = getLoopPreview(sheet.text);
+
+      row.appendChild(title);
+      row.appendChild(preview);
+
+      row.onclick = () => {
+        loopActiveSheetId = sheet.id;
+        renderLoop();
+      };
+
+      list.appendChild(row);
+    });
+}
+
+function renderLoopEditor(){
+  const sheet = getActiveLoopSheet();
+  if(!sheet) return;
+
+  const title = document.getElementById("loopTitle");
+  const text = document.getElementById("loopText");
+
+  if(title && document.activeElement !== title){
+    title.value = sheet.title || "";
+  }
+
+  if(text && document.activeElement !== text){
+    text.value = sheet.text || "";
+  }
+
+  renderLoopActiveTags();
+}
+
+function renderLoop(){
+  renderLoopTags();
+  renderLoopSheetList();
+  renderLoopEditor();
+}
+
+function updateActiveLoopSheetFromInputs(){
+  const sheet = getActiveLoopSheet();
+  if(!sheet) return;
+
+  const title = document.getElementById("loopTitle")?.value || "";
+  const text = document.getElementById("loopText")?.value || "";
+
+  sheet.title = title;
+  sheet.text = text;
+  sheet.tags = extractLoopTags(title,text);
+  sheet.updatedAt = Date.now();
+
+  const status = document.getElementById("loopSaveStatus");
+  if(status) status.textContent = "Sparar...";
+
+  clearTimeout(loopSaveTimer);
+
+  loopSaveTimer = setTimeout(() => {
+    if(status) status.textContent = "Sparat";
+  },400);
+
+  renderLoopTags();
+  renderLoopActiveTags();
+  renderLoopSheetList();
+}
+
+window.newLoopSheet = () => {
+  const id = "local-" + Date.now();
+
+  const sheet = {
+    id,
+    title:"",
+    text:"",
+    tags:[],
+    createdAt:Date.now(),
+    updatedAt:Date.now()
+  };
+
+  loopSheets.unshift(sheet);
+  loopActiveSheetId = id;
+  loopActiveTag = "all";
+
+  renderLoop();
+
+  setTimeout(() => {
+    document.getElementById("loopTitle")?.focus();
+  },80);
+};
+
+window.selectLoopTag = (tag) => {
+  loopActiveTag = tag;
+
+  if(window.innerWidth <= 900){
+    document.getElementById("loop360")?.classList.remove("tags-open");
+  }
+
+  const filtered = tag === "all"
+    ? loopSheets
+    : loopSheets.filter(sheet => (sheet.tags || []).includes(tag));
+
+  if(filtered.length && !filtered.some(s => s.id === loopActiveSheetId)){
+    loopActiveSheetId = filtered[0].id;
+  }
+
+  renderLoop();
+};
+
+window.toggleLoopTags = () => {
+  document.getElementById("loop360")?.classList.toggle("tags-open");
+};
 
 window.open360Loop = () => {
-
-  document
-    .getElementById("loop360")
-    .classList
-    .remove("hidden");
-
+  document.getElementById("loop360")?.classList.remove("hidden");
   lockPage();
+  renderLoop();
+
+  setTimeout(() => {
+    document.getElementById("loopTitle")?.focus();
+  },120);
 };
 
 window.close360Loop = () => {
-
-  document
-    .getElementById("loop360")
-    .classList
-    .add("hidden");
-
+  document.getElementById("loop360")?.classList.add("hidden");
+  document.getElementById("loop360")?.classList.remove("tags-open");
   unlockPage();
 };
+
+document.addEventListener("input", e => {
+  if(
+    e.target?.id === "loopTitle" ||
+    e.target?.id === "loopText"
+  ){
+    updateActiveLoopSheetFromInputs();
+  }
+});
+
+document.addEventListener("keydown", e => {
+  const loop = document.getElementById("loop360");
+
+  if(e.key === "Escape" && loop && !loop.classList.contains("hidden")){
+    if(loop.classList.contains("tags-open")){
+      loop.classList.remove("tags-open");
+    } else {
+      close360Loop();
+    }
+  }
+});
