@@ -1475,3 +1475,24 @@ loadWeather();
 setInterval(() => {
   location.reload();
 }, 180000);
+/* 360 LOOP */
+
+window.open360Loop = () => {
+
+  document
+    .getElementById("loop360")
+    .classList
+    .remove("hidden");
+
+  lockPage();
+};
+
+window.close360Loop = () => {
+
+  document
+    .getElementById("loop360")
+    .classList
+    .add("hidden");
+
+  unlockPage();
+};
