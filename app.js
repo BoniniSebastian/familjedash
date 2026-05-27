@@ -1130,3 +1130,303 @@ loadWeather();
 setInterval(() => {
   location.reload();
 }, 180000);
+/* LINKS */
+
+function normalizeUrl(url){
+
+  if(!url) return "";
+
+  const trimmed =
+    url.trim();
+
+  if(
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://")
+  ){
+    return trimmed;
+  }
+
+  return "https://" + trimmed;
+}
+
+function bindLinksView(){
+
+  const list =
+    document.getElementById("links-list");
+
+  if(unsubscribeLinks){
+    unsubscribeLinks();
+  }
+
+  const q = query(
+    collection(db,"lankar"),
+    orderBy("createdAt","asc")
+  );
+
+  unsubscribeLinks = onSnapshot(q, snap => {
+
+    list.innerHTML = "";
+
+    snap.forEach(d => {
+
+      const data = d.data();
+
+      const li = document.createElement("li");
+      li.className = "link-item";
+
+      const left = document.createElement("div");
+
+      const a = document.createElement("a");
+      a.href = normalizeUrl(data.url);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = data.title || data.url;
+
+      const urlText = document.createElement("div");
+      urlText.className = "link-url";
+      urlText.textContent = data.url;
+
+      left.appendChild(a);
+      left.appendChild(urlText);
+
+      const controls = document.createElement("div");
+      controls.className = "task-controls";
+
+      const edit = document.createElement("button");
+      edit.className = "delete-btn";
+      edit.textContent = "Ändra";
+
+      edit.onclick = async () => {
+
+        const newTitle =
+          prompt("Namn", data.title || "");
+
+        if(newTitle === null) return;
+
+        const newUrl =
+          prompt("URL", data.url || "");
+
+        if(newUrl === null) return;
+
+        await updateDoc(
+          doc(db,"lankar",d.id),
+          {
+            title:newTitle.trim(),
+            url:newUrl.trim()
+          }
+        );
+      };
+
+      const del = document.createElement("button");
+      del.className = "delete-btn";
+      del.textContent = "Ta bort";
+
+      del.onclick = () =>
+        deleteDoc(doc(db,"lankar",d.id));
+
+      controls.appendChild(edit);
+      controls.appendChild(del);
+
+      li.appendChild(left);
+      li.appendChild(controls);
+
+      list.appendChild(li);
+    });
+  });
+}
+
+window.addLink = async () => {
+
+  const titleInput =
+    document.getElementById("link-title-input");
+
+  const urlInput =
+    document.getElementById("link-url-input");
+
+  const title =
+    titleInput.value.trim();
+
+  const url =
+    urlInput.value.trim();
+
+  if(!title || !url) return;
+
+  await addDoc(
+    collection(db,"lankar"),
+    {
+      title,
+      url,
+      createdAt:Date.now()
+    }
+  );
+
+  titleInput.value = "";
+  urlInput.value = "";
+  titleInput.focus();
+};
+
+/* JOBS */
+
+function clearJobForm(){
+
+  editingJobId = null;
+
+  document
+    .getElementById("job-company-input")
+    .value = "";
+
+  document
+    .getElementById("job-status-input")
+    .value = "";
+
+  document
+    .getElementById("job-notes-input")
+    .value = "";
+}
+
+function bindJobsView(){
+
+  const list =
+    document.getElementById("jobs-list");
+
+  if(unsubscribeJobs){
+    unsubscribeJobs();
+  }
+
+  const q = query(
+    collection(db,"jobbsokaren"),
+    orderBy("createdAt","desc")
+  );
+
+  unsubscribeJobs = onSnapshot(q, snap => {
+
+    list.innerHTML = "";
+
+    snap.forEach(d => {
+
+      const data = d.data();
+
+      const li = document.createElement("li");
+      li.className = "job-item";
+
+      const top = document.createElement("div");
+      top.className = "job-top";
+
+      const company = document.createElement("div");
+      company.className = "job-company";
+      company.textContent =
+        data.company || "Utan företag";
+
+      const status = document.createElement("div");
+      status.className = "job-status";
+      status.textContent =
+        data.status || "Ingen status";
+
+      top.appendChild(company);
+      top.appendChild(status);
+
+      const notes = document.createElement("div");
+      notes.className = "job-notes";
+      notes.textContent = data.notes || "";
+
+      const controls = document.createElement("div");
+      controls.className = "task-controls job-controls";
+
+      const edit = document.createElement("button");
+      edit.className = "delete-btn";
+      edit.textContent = "Ändra";
+
+      edit.onclick = () => {
+
+        editingJobId = d.id;
+
+        document
+          .getElementById("job-company-input")
+          .value = data.company || "";
+
+        document
+          .getElementById("job-status-input")
+          .value = data.status || "";
+
+        document
+          .getElementById("job-notes-input")
+          .value = data.notes || "";
+
+        document
+          .getElementById("job-company-input")
+          .focus();
+      };
+
+      const del = document.createElement("button");
+      del.className = "delete-btn";
+      del.textContent = "Ta bort";
+
+      del.onclick = () =>
+        deleteDoc(doc(db,"jobbsokaren",d.id));
+
+      controls.appendChild(edit);
+      controls.appendChild(del);
+
+      li.appendChild(top);
+
+      if(data.notes){
+        li.appendChild(notes);
+      }
+
+      li.appendChild(controls);
+
+      list.appendChild(li);
+    });
+  });
+}
+
+window.saveJob = async () => {
+
+  const company =
+    document
+      .getElementById("job-company-input")
+      .value
+      .trim();
+
+  const status =
+    document
+      .getElementById("job-status-input")
+      .value
+      .trim();
+
+  const notes =
+    document
+      .getElementById("job-notes-input")
+      .value
+      .trim();
+
+  if(!company && !status && !notes) return;
+
+  if(editingJobId){
+
+    await updateDoc(
+      doc(db,"jobbsokaren",editingJobId),
+      {
+        company,
+        status,
+        notes,
+        updatedAt:Date.now()
+      }
+    );
+
+  } else {
+
+    await addDoc(
+      collection(db,"jobbsokaren"),
+      {
+        company,
+        status,
+        notes,
+        createdAt:Date.now(),
+        updatedAt:Date.now()
+      }
+    );
+  }
+
+  clearJobForm();
+};
