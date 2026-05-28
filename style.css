@@ -1787,5 +1787,78 @@ body.light-mode .loop-delete-sheet{
 
   .loop-new-sheet{
     z-index:140;
+/* =========================================
+   360 LOOP FIX: SIDEBAR / MOBILE TAG PANEL
+========================================= */
+
+/* Desktop: vänsterspalten ska fylla hela höjden */
+@media (min-width:901px){
+  .loop-sidebar{
+    height:100vh;
+    max-height:none;
+  }
+
+  .loop-sheet-list{
+    height:100vh;
+  }
+}
+
+/* Mobil: taggpanelen ska vara riktig glass-panel och alltid ovanpå */
+@media (max-width:900px){
+
+  .loop-tag-trigger{
+    display:flex !important;
+    z-index:170;
+  }
+
+  .loop-sidebar{
+    max-height:62vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+
+    z-index:160;
+
+    background:rgba(245,250,252,.68);
+    backdrop-filter:blur(34px) saturate(1.25);
+    -webkit-backdrop-filter:blur(34px) saturate(1.25);
+
+    box-shadow:
+      0 24px 80px rgba(0,0,0,.18),
+      inset 0 -1px 0 rgba(255,255,255,.35);
+  }
+
+  body:not(.light-mode) .loop-sidebar{
+    background:rgba(8,16,26,.72);
+  }
+
+  .loop-mobile-backdrop{
+    z-index:150;
+    background:rgba(0,0,0,.18);
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+  }
+
+  /* Dölj stäng-krysset när taggpanelen är öppen */
+  #loop360.tags-open .loop-close{
+    display:none;
+  }
+
+  /* Ge taggarna mer luft och flera på bredden */
+  .loop-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px 20px;
+    padding-bottom:10px;
+  }
+
+  .loop-tag{
+    font-size:15px;
+    line-height:1.2;
+    white-space:nowrap;
+  }
+
+  /* Så inte första taggarna hamnar bakom #Alla-knappen */
+  .loop-sidebar{
+    padding-top:calc(env(safe-area-inset-top) + 82px);
   }
 }
