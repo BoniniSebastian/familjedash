@@ -1407,5 +1407,23 @@ body.light-mode .loop-tag-trigger{
   .loop-new-sheet{
     right:20px;
     bottom:calc(env(safe-area-inset-bottom) + 24px);
+  .loop-tags-inner{
+  width:100%;
+  height:100%;
+}
+
+@media (max-width:900px){
+  .loop-tags-inner{
+    max-height:55vh;
+    overflow:auto;
+    padding:
+      calc(env(safe-area-inset-top) + 26px)
+      18px
+      calc(env(safe-area-inset-bottom) + 22px);
+  }
+
+  .loop-sidebar{
+    padding:0;
+    overflow:hidden;
   }
 }
