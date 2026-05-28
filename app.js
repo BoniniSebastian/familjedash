@@ -1529,11 +1529,32 @@ function getActiveLoopSheet(){
   return loopSheets.find(s => s.id === loopActiveSheetId);
 }
 
+function createTempLoopSheet(){
+  const existingTemp = loopSheets.find(s => s.isTemp);
+
+  if(existingTemp){
+    loopActiveSheetId = existingTemp.id;
+    return;
+  }
+
+  const tempId = "temp-sheet-" + Date.now();
+
+  loopSheets.unshift({
+    id:tempId,
+    title:"",
+    text:"",
+    tags:[],
+    createdAt:Date.now(),
+    updatedAt:Date.now(),
+    isTemp:true
+  });
+
+  loopActiveSheetId = tempId;
+}
+
 function renderLoopTags(){
 
-  const wrap =
-    document.getElementById("loopTags");
-
+  const wrap = document.getElementById("loopTags");
   if(!wrap) return;
 
   wrap.innerHTML = "";
@@ -1546,10 +1567,7 @@ function renderLoopTags(){
       : "loop-tag";
 
   allBtn.textContent = "Allt";
-
-  allBtn.onclick = () => {
-    selectLoopTag("all");
-  };
+  allBtn.onclick = () => selectLoopTag("all");
 
   wrap.appendChild(allBtn);
 
@@ -1562,12 +1580,8 @@ function renderLoopTags(){
         ? "loop-tag active"
         : "loop-tag";
 
-    btn.textContent =
-      formatLoopTag(tag);
-
-    btn.onclick = () => {
-      selectLoopTag(tag);
-    };
+    btn.textContent = formatLoopTag(tag);
+    btn.onclick = () => selectLoopTag(tag);
 
     wrap.appendChild(btn);
   });
@@ -1575,13 +1589,10 @@ function renderLoopTags(){
 
 function renderLoopActiveTags(){
 
-  const wrap =
-    document.getElementById("loopActiveTags");
-
+  const wrap = document.getElementById("loopActiveTags");
   if(!wrap) return;
 
-  const sheet =
-    getActiveLoopSheet();
+  const sheet = getActiveLoopSheet();
 
   wrap.innerHTML = "";
 
@@ -1589,15 +1600,11 @@ function renderLoopActiveTags(){
 
   (sheet.tags || []).forEach(tag => {
 
-    const pill =
-      document.createElement("button");
+    const pill = document.createElement("button");
 
     pill.className = "loop-pill";
     pill.textContent = "#" + formatLoopTag(tag);
-
-    pill.onclick = () => {
-      selectLoopTag(tag);
-    };
+    pill.onclick = () => selectLoopTag(tag);
 
     wrap.appendChild(pill);
   });
@@ -1605,9 +1612,7 @@ function renderLoopActiveTags(){
 
 function renderLoopSheetList(){
 
-  const list =
-    document.getElementById("loopSheetList");
-
+  const list = document.getElementById("loopSheetList");
   if(!list) return;
 
   list.innerHTML = "";
@@ -1615,51 +1620,35 @@ function renderLoopSheetList(){
   let filtered = loopSheets;
 
   if(loopActiveTag !== "all"){
-
     filtered = loopSheets.filter(sheet =>
-      (sheet.tags || []).includes(loopActiveTag)
+      sheet.isTemp || (sheet.tags || []).includes(loopActiveTag)
     );
   }
 
   filtered
-    .sort((a,b) =>
-      (b.updatedAt || 0) - (a.updatedAt || 0)
-    )
+    .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0))
     .forEach(sheet => {
 
-      const row =
-        document.createElement("div");
+      const row = document.createElement("div");
 
       row.className =
         sheet.id === loopActiveSheetId
           ? "loop-sheet-row active"
           : "loop-sheet-row";
 
-      const title =
-        document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "loop-sheet-row-title";
+      title.textContent = sheet.title?.trim() || "Namnlöst blad";
 
-      title.className =
-        "loop-sheet-row-title";
-
-      title.textContent =
-        sheet.title?.trim() || "Namnlöst blad";
-
-      const preview =
-        document.createElement("div");
-
-      preview.className =
-        "loop-sheet-row-preview";
-
-      preview.textContent =
-        getLoopPreview(sheet.text);
+      const preview = document.createElement("div");
+      preview.className = "loop-sheet-row-preview";
+      preview.textContent = getLoopPreview(sheet.text);
 
       row.appendChild(title);
       row.appendChild(preview);
 
       row.onclick = () => {
-
         loopActiveSheetId = sheet.id;
-
         renderLoopEditor();
         renderLoopSheetList();
       };
@@ -1670,22 +1659,17 @@ function renderLoopSheetList(){
 
 function renderLoopEditor(){
 
-  const sheet =
-    getActiveLoopSheet();
-
+  const sheet = getActiveLoopSheet();
   if(!sheet) return;
 
-  const title =
-    document.getElementById("loopTitle");
+  const title = document.getElementById("loopTitle");
+  const text = document.getElementById("loopText");
 
-  const text =
-    document.getElementById("loopText");
-
-  if(title){
+  if(title && document.activeElement !== title){
     title.value = sheet.title || "";
   }
 
-  if(text){
+  if(text && document.activeElement !== text){
     text.value = sheet.text || "";
   }
 
@@ -1693,191 +1677,12 @@ function renderLoopEditor(){
 }
 
 function renderLoop(){
-
   renderLoopTags();
   renderLoopSheetList();
   renderLoopEditor();
 }
 
 async function saveLoopSheetRealtime(){
-
-  const sheet =
-    getActiveLoopSheet();
-
-  if(!sheet) return;
-
-  const title =
-    document.getElementById("loopTitle")?.value || "";
-
-  const text =
-    document.getElementById("loopText")?.value || "";
-
-  const tags =
-    extractLoopTags(title,text);
-
-  const status =
-    document.getElementById("loopSaveStatus");
-
-  if(status){
-    status.textContent = "Sparar...";
-  }
-
-  clearTimeout(loopSaveTimer);
-
-  loopSaveTimer = setTimeout(async () => {
-
-    await updateDoc(
-      doc(db, "loopSheets", sheet.id),
-      {
-        title,
-        text,
-        tags,
-        updatedAt: Date.now()
-      }
-    );
-
-    if(status){
-      status.textContent = "Sparat";
-    }
-
-  }, 250);
-}
-
-window.newLoopSheet = async () => {
-
-  const newDoc = await addDoc(
-    loopSheetsRef,
-    {
-      title:"",
-      text:"",
-      tags:[],
-      createdAt:Date.now(),
-      updatedAt:Date.now()
-    }
-  );
-
-  loopActiveSheetId = newDoc.id;
-};
-
-window.selectLoopTag = (tag) => {
-
-  loopActiveTag = tag;
-
-  if(window.innerWidth <= 900){
-
-    document
-      .getElementById("loop360")
-      ?.classList
-      .remove("tags-open");
-  }
-
-  const filtered =
-    tag === "all"
-      ? loopSheets
-      : loopSheets.filter(sheet =>
-          (sheet.tags || []).includes(tag)
-        );
-
-  if(filtered.length){
-
-    filtered.sort((a,b) =>
-      (b.updatedAt || 0) - (a.updatedAt || 0)
-    );
-
-    loopActiveSheetId = filtered[0].id;
-  }
-
-  renderLoop();
-};
-
-window.toggleLoopTags = () => {
-
-  document
-    .getElementById("loop360")
-    ?.classList
-    .toggle("tags-open");
-};
-
-window.open360Loop = () => {
-
-  document
-    .getElementById("loop360")
-    ?.classList
-    .remove("hidden");
-
-  lockPage();
-
-  if(!loopUnsubscribe){
-
-    const q = query(
-      loopSheetsRef,
-      orderBy("updatedAt","desc")
-    );
-
-    loopUnsubscribe =
-      onSnapshot(q, snap => {
-
-        loopSheets = [];
-
-        snap.forEach(d => {
-
-          loopSheets.push({
-            id:d.id,
-            ...d.data()
-          });
-        });
-
-       if(!loopActiveSheetId){
-
-  const tempId = "temp-sheet";
-
-  loopSheets.unshift({
-    id: tempId,
-    title: "",
-    text: "",
-    tags: [],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    isTemp: true
-  });
-
-  loopActiveSheetId = tempId;
-}
-
-        renderLoop();
-      });
-  }
-
-  setTimeout(() => {
-    document
-      .getElementById("loopTitle")
-      ?.focus();
-  },120);
-};
-
-window.close360Loop = () => {
-
-  document
-    .getElementById("loop360")
-    ?.classList
-    .add("hidden");
-
-  document
-    .getElementById("loop360")
-    ?.classList
-    .remove("tags-open");
-
-  unlockPage();
-};
-
-document.addEventListener("input", e => {
-
-  if(
-    e.target?.id === "loopTitle" ||
-    e.target?.id === "loopText"
-  ){
-
-   async function saveLoopSheetRealtime(){
 
   const sheet = getActiveLoopSheet();
   if(!sheet) return;
@@ -1888,6 +1693,11 @@ document.addEventListener("input", e => {
 
   const status = document.getElementById("loopSaveStatus");
   if(status) status.textContent = "Sparar...";
+
+  sheet.title = title;
+  sheet.text = text;
+  sheet.tags = tags;
+  sheet.updatedAt = Date.now();
 
   clearTimeout(loopSaveTimer);
 
@@ -1903,6 +1713,8 @@ document.addEventListener("input", e => {
         updatedAt:Date.now()
       });
 
+      sheet.id = newDoc.id;
+      sheet.isTemp = false;
       loopActiveSheetId = newDoc.id;
 
     } else {
@@ -1913,40 +1725,132 @@ document.addEventListener("input", e => {
           title,
           text,
           tags,
-          updatedAt: Date.now()
+          updatedAt:Date.now()
         }
       );
     }
 
     if(status) status.textContent = "Sparat";
 
-  }, 250);
+  },250);
 }
 
-      renderLoopActiveTags();
-      renderLoopSheetList();
-      renderLoopTags();
-    }
+window.newLoopSheet = () => {
+  createTempLoopSheet();
+  loopActiveTag = "all";
+  renderLoop();
+
+  setTimeout(() => {
+    document.getElementById("loopTitle")?.focus();
+  },80);
+};
+
+window.selectLoopTag = (tag) => {
+
+  loopActiveTag = tag;
+
+  if(window.innerWidth <= 900){
+    document.getElementById("loop360")?.classList.remove("tags-open");
+  }
+
+  const filtered =
+    tag === "all"
+      ? loopSheets
+      : loopSheets.filter(sheet =>
+          (sheet.tags || []).includes(tag)
+        );
+
+  if(filtered.length){
+    filtered.sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    loopActiveSheetId = filtered[0].id;
+  }
+
+  renderLoop();
+};
+
+window.toggleLoopTags = () => {
+  document.getElementById("loop360")?.classList.toggle("tags-open");
+};
+
+window.open360Loop = () => {
+
+  document.getElementById("loop360")?.classList.remove("hidden");
+  lockPage();
+
+  if(!loopUnsubscribe){
+
+    const q = query(
+      loopSheetsRef,
+      orderBy("updatedAt","desc")
+    );
+
+    loopUnsubscribe = onSnapshot(q, snap => {
+
+      const existingTemp = loopSheets.find(s => s.isTemp);
+
+      loopSheets = [];
+
+      if(existingTemp){
+        loopSheets.push(existingTemp);
+      }
+
+      snap.forEach(d => {
+        loopSheets.push({
+          id:d.id,
+          ...d.data()
+        });
+      });
+
+      if(!loopActiveSheetId){
+        createTempLoopSheet();
+      }
+
+      renderLoop();
+    });
+  } else {
+
+    createTempLoopSheet();
+    renderLoop();
+  }
+
+  setTimeout(() => {
+    document.getElementById("loopTitle")?.focus();
+  },120);
+};
+
+window.close360Loop = () => {
+
+  document.getElementById("loop360")?.classList.add("hidden");
+  document.getElementById("loop360")?.classList.remove("tags-open");
+
+  unlockPage();
+};
+
+document.addEventListener("input", e => {
+
+  if(
+    e.target?.id === "loopTitle" ||
+    e.target?.id === "loopText"
+  ){
+    saveLoopSheetRealtime();
+    renderLoopActiveTags();
+    renderLoopSheetList();
+    renderLoopTags();
   }
 });
 
 document.addEventListener("keydown", e => {
 
-  const loop =
-    document.getElementById("loop360");
+  const loop = document.getElementById("loop360");
 
   if(
     e.key === "Escape" &&
     loop &&
     !loop.classList.contains("hidden")
   ){
-
     if(loop.classList.contains("tags-open")){
-
       loop.classList.remove("tags-open");
-
     } else {
-
       close360Loop();
     }
   }
