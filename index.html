@@ -240,30 +240,68 @@
     <div class="loop-blob loop-blob-3"></div>
   </div>
 
-  <button class="loop-tag-trigger" onclick="toggleLoopTags()"># Alla</button>
-  <div class="loop-mobile-backdrop" onclick="closeLoopTags()"></div>
+  <button class="loop-tag-trigger" onclick="toggleLoopTags()">
+    # Alla
+  </button>
 
-  <aside id="loopSidebar" class="loop-sidebar">
-    <div class="loop-logo">360 LOOP</div>
+  <div
+    class="loop-mobile-backdrop"
+    onclick="closeLoopTags()">
+  </div>
 
-    <div class="loop-tag-title">TAGGAR</div>
+  <aside
+    id="loopSidebar"
+    class="loop-sidebar loop-tags-panel">
 
-    <div id="loopTags" class="loop-tags">
-      <button class="loop-tag active" data-tag="all" onclick="selectLoopTag('all')">Allt</button>
+    <div class="loop-tags-inner">
+
+      <div class="loop-logo">
+        360 LOOP
+      </div>
+
+      <div class="loop-tag-title">
+        TAGGAR
+      </div>
+
+      <div id="loopTags" class="loop-tags">
+
+        <button
+          class="loop-tag active"
+          data-tag="all"
+          onclick="selectLoopTag('all')">
+
+          Allt
+
+        </button>
+
+      </div>
+
     </div>
+
   </aside>
 
   <main class="loop-workspace">
 
-    <button class="loop-new-sheet" onclick="newLoopSheet()">＋</button>
+    <button
+      class="loop-new-sheet"
+      onclick="newLoopSheet()">
+
+      ＋
+
+    </button>
 
     <section class="loop-sheet-list">
+
       <div id="loopSheetList"></div>
+
     </section>
 
     <section class="loop-sheet-editor">
 
-      <div id="loopActiveTags" class="loop-active-tags"></div>
+      <div
+        id="loopActiveTags"
+        class="loop-active-tags">
+      </div>
 
       <input
         id="loopTitle"
@@ -277,10 +315,21 @@
         placeholder="Börja skriva... Använd #taggar var som helst."
       ></textarea>
 
-      <div id="loopSaveStatus" class="loop-save-status">Sparat</div>
+      <div
+        id="loopSaveStatus"
+        class="loop-save-status">
+
+        Sparat
+
+      </div>
 
     </section>
 
   </main>
 
 </div>
+
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
