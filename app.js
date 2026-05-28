@@ -1772,6 +1772,13 @@ window.toggleLoopTags = () => {
   document.getElementById("loop360")?.classList.toggle("tags-open");
 };
 
+window.closeLoopTags = () => {
+  document
+    .getElementById("loop360")
+    ?.classList
+    .remove("tags-open");
+};
+
 window.open360Loop = () => {
 
   document.getElementById("loop360")?.classList.remove("hidden");
