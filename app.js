@@ -1827,9 +1827,22 @@ window.open360Loop = () => {
           });
         });
 
-        if(!loopActiveSheetId && loopSheets.length){
-          loopActiveSheetId = loopSheets[0].id;
-        }
+       if(!loopActiveSheetId){
+
+  const tempId = "temp-sheet";
+
+  loopSheets.unshift({
+    id: tempId,
+    title: "",
+    text: "",
+    tags: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    isTemp: true
+  });
+
+  loopActiveSheetId = tempId;
+}
 
         renderLoop();
       });
