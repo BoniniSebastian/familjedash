@@ -1472,12 +1472,6 @@ async function loadWeather(){
 loadWeather();
 
 
-Ersätt hela 360-delen i app.js, alltså från:
-
-/* 360 LOOP FIREBASE V1 */
-
-till slutet av filen med detta:
-
 /* 360 LOOP FIREBASE V1 */
 const loopSheetsRef = collection(db, "loopSheets");
 let loopSheets = [];
