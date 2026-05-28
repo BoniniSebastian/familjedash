@@ -1472,29 +1472,29 @@ async function loadWeather(){
 loadWeather();
 
 
+Ersätt hela 360-delen i app.js, alltså från:
+
 /* 360 LOOP FIREBASE V1 */
 
-const loopSheetsRef = collection(db, "loopSheets");
+till slutet av filen med detta:
 
+/* 360 LOOP FIREBASE V1 */
+const loopSheetsRef = collection(db, "loopSheets");
 let loopSheets = [];
 let loopActiveSheetId = null;
 let loopActiveTag = "all";
 let loopSaveTimer = null;
 let loopUnsubscribe = null;
-
 function normalizeLoopTag(tag){
   return tag.replace("#","").trim().toLowerCase();
 }
-
 function formatLoopTag(tag){
   if(tag === "all") return "Allt";
   return tag.charAt(0).toUpperCase() + tag.slice(1);
 }
-
 function extractLoopTags(title,text){
   const source = `${title || ""} ${text || ""}`;
   const matches = source.match(/#[a-zA-ZåäöÅÄÖ0-9_-]+/g) || [];
-
   return [...new Set(
     matches
       .map(t => normalizeLoopTag(t))
@@ -1502,18 +1502,14 @@ function extractLoopTags(title,text){
       .filter(t => t !== "action")
   )].sort((a,b) => a.localeCompare(b,"sv"));
 }
-
 function getLoopPreview(text){
   const clean = (text || "")
     .replace(/#[a-zA-ZåäöÅÄÖ0-9_-]+/g,"")
     .trim();
-
   return clean ? clean.slice(0,90) : "Tomt blad";
 }
-
 function getAllLoopTags(){
   const tags = [];
-
   loopSheets.forEach(sheet => {
     (sheet.tags || []).forEach(tag => {
       if(!tags.includes(tag)){
@@ -1521,24 +1517,26 @@ function getAllLoopTags(){
       }
     });
   });
-
   return tags.sort((a,b) => a.localeCompare(b,"sv"));
 }
-
 function getActiveLoopSheet(){
   return loopSheets.find(s => s.id === loopActiveSheetId);
 }
-
+function updateLoopTriggerLabel(){
+  const btn = document.querySelector(".loop-tag-trigger");
+  if(!btn) return;
+  btn.textContent =
+    loopActiveTag === "all"
+      ? "# Alla"
+      : "#" + formatLoopTag(loopActiveTag);
+}
 function createTempLoopSheet(){
   const existingTemp = loopSheets.find(s => s.isTemp);
-
   if(existingTemp){
     loopActiveSheetId = existingTemp.id;
     return;
   }
-
   const tempId = "temp-sheet-" + Date.now();
-
   loopSheets.unshift({
     id:tempId,
     title:"",
@@ -1548,163 +1546,114 @@ function createTempLoopSheet(){
     updatedAt:Date.now(),
     isTemp:true
   });
-
   loopActiveSheetId = tempId;
 }
-
 function renderLoopTags(){
-
   const wrap = document.getElementById("loopTags");
   if(!wrap) return;
-
   wrap.innerHTML = "";
-
   const allBtn = document.createElement("button");
-
   allBtn.className =
     loopActiveTag === "all"
       ? "loop-tag active"
       : "loop-tag";
-
   allBtn.textContent = "Allt";
   allBtn.onclick = () => selectLoopTag("all");
-
   wrap.appendChild(allBtn);
-
   getAllLoopTags().forEach(tag => {
-
     const btn = document.createElement("button");
-
     btn.className =
       loopActiveTag === tag
         ? "loop-tag active"
         : "loop-tag";
-
     btn.textContent = formatLoopTag(tag);
     btn.onclick = () => selectLoopTag(tag);
-
     wrap.appendChild(btn);
   });
+  updateLoopTriggerLabel();
 }
-
 function renderLoopActiveTags(){
-
   const wrap = document.getElementById("loopActiveTags");
   if(!wrap) return;
-
   const sheet = getActiveLoopSheet();
-
   wrap.innerHTML = "";
-
   if(!sheet) return;
-
   (sheet.tags || []).forEach(tag => {
-
     const pill = document.createElement("button");
-
     pill.className = "loop-pill";
     pill.textContent = "#" + formatLoopTag(tag);
     pill.onclick = () => selectLoopTag(tag);
-
     wrap.appendChild(pill);
   });
 }
-
 function renderLoopSheetList(){
-
   const list = document.getElementById("loopSheetList");
   if(!list) return;
-
   list.innerHTML = "";
-
   let filtered = loopSheets;
-
   if(loopActiveTag !== "all"){
     filtered = loopSheets.filter(sheet =>
       sheet.isTemp || (sheet.tags || []).includes(loopActiveTag)
     );
   }
-
   filtered
     .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0))
     .forEach(sheet => {
-
       const row = document.createElement("div");
-
       row.className =
         sheet.id === loopActiveSheetId
           ? "loop-sheet-row active"
           : "loop-sheet-row";
-
       const title = document.createElement("div");
       title.className = "loop-sheet-row-title";
       title.textContent = sheet.title?.trim() || "Namnlöst blad";
-
       const preview = document.createElement("div");
       preview.className = "loop-sheet-row-preview";
       preview.textContent = getLoopPreview(sheet.text);
-
       row.appendChild(title);
       row.appendChild(preview);
-
       row.onclick = () => {
         loopActiveSheetId = sheet.id;
         renderLoopEditor();
         renderLoopSheetList();
+        closeLoopTags();
       };
-
       list.appendChild(row);
     });
 }
-
 function renderLoopEditor(){
-
   const sheet = getActiveLoopSheet();
   if(!sheet) return;
-
   const title = document.getElementById("loopTitle");
   const text = document.getElementById("loopText");
-
   if(title && document.activeElement !== title){
     title.value = sheet.title || "";
   }
-
   if(text && document.activeElement !== text){
     text.value = sheet.text || "";
   }
-
   renderLoopActiveTags();
 }
-
 function renderLoop(){
   renderLoopTags();
   renderLoopSheetList();
   renderLoopEditor();
 }
-
 async function saveLoopSheetRealtime(){
-
   const sheet = getActiveLoopSheet();
   if(!sheet) return;
-
   const title = document.getElementById("loopTitle")?.value || "";
   const text = document.getElementById("loopText")?.value || "";
   const tags = extractLoopTags(title,text);
-
   const status = document.getElementById("loopSaveStatus");
   if(status) status.textContent = "Sparar...";
-
   sheet.title = title;
   sheet.text = text;
   sheet.tags = tags;
   sheet.updatedAt = Date.now();
-
   clearTimeout(loopSaveTimer);
-
   loopSaveTimer = setTimeout(async () => {
-
     if(sheet.isTemp){
-
       const newDoc = await addDoc(loopSheetsRef,{
         title,
         text,
@@ -1712,13 +1661,10 @@ async function saveLoopSheetRealtime(){
         createdAt:Date.now(),
         updatedAt:Date.now()
       });
-
       sheet.id = newDoc.id;
       sheet.isTemp = false;
       loopActiveSheetId = newDoc.id;
-
     } else {
-
       await updateDoc(
         doc(db, "loopSheets", sheet.id),
         {
@@ -1729,112 +1675,80 @@ async function saveLoopSheetRealtime(){
         }
       );
     }
-
     if(status) status.textContent = "Sparat";
-
   },250);
 }
-
 window.newLoopSheet = () => {
   createTempLoopSheet();
   loopActiveTag = "all";
   renderLoop();
-
+  closeLoopTags();
   setTimeout(() => {
     document.getElementById("loopTitle")?.focus();
   },80);
 };
-
 window.selectLoopTag = (tag) => {
-
   loopActiveTag = tag;
-
   if(window.innerWidth <= 900){
-    document.getElementById("loop360")?.classList.remove("tags-open");
+    closeLoopTags();
   }
-
   const filtered =
     tag === "all"
       ? loopSheets
       : loopSheets.filter(sheet =>
           (sheet.tags || []).includes(tag)
         );
-
   if(filtered.length){
     filtered.sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     loopActiveSheetId = filtered[0].id;
   }
-
   renderLoop();
 };
-
 window.toggleLoopTags = () => {
   document.getElementById("loop360")?.classList.toggle("tags-open");
 };
-
 window.closeLoopTags = () => {
-  document
-    .getElementById("loop360")
-    ?.classList
-    .remove("tags-open");
+  document.getElementById("loop360")?.classList.remove("tags-open");
 };
-
 window.open360Loop = () => {
-
   document.getElementById("loop360")?.classList.remove("hidden");
   lockPage();
-
   if(!loopUnsubscribe){
-
     const q = query(
       loopSheetsRef,
       orderBy("updatedAt","desc")
     );
-
     loopUnsubscribe = onSnapshot(q, snap => {
-
       const existingTemp = loopSheets.find(s => s.isTemp);
-
       loopSheets = [];
-
       if(existingTemp){
         loopSheets.push(existingTemp);
       }
-
       snap.forEach(d => {
         loopSheets.push({
           id:d.id,
           ...d.data()
         });
       });
-
       if(!loopActiveSheetId){
         createTempLoopSheet();
       }
-
       renderLoop();
     });
   } else {
-
     createTempLoopSheet();
     renderLoop();
   }
-
   setTimeout(() => {
     document.getElementById("loopTitle")?.focus();
   },120);
 };
-
 window.close360Loop = () => {
-
   document.getElementById("loop360")?.classList.add("hidden");
   document.getElementById("loop360")?.classList.remove("tags-open");
-
   unlockPage();
 };
-
 document.addEventListener("input", e => {
-
   if(
     e.target?.id === "loopTitle" ||
     e.target?.id === "loopText"
@@ -1845,11 +1759,8 @@ document.addEventListener("input", e => {
     renderLoopTags();
   }
 });
-
 document.addEventListener("keydown", e => {
-
   const loop = document.getElementById("loop360");
-
   if(
     e.key === "Escape" &&
     loop &&
