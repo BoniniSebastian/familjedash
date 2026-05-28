@@ -1877,24 +1877,51 @@ document.addEventListener("input", e => {
     e.target?.id === "loopText"
   ){
 
-    saveLoopSheetRealtime();
+   async function saveLoopSheetRealtime(){
 
-    const sheet =
-      getActiveLoopSheet();
+  const sheet = getActiveLoopSheet();
+  if(!sheet) return;
 
-    if(sheet){
+  const title = document.getElementById("loopTitle")?.value || "";
+  const text = document.getElementById("loopText")?.value || "";
+  const tags = extractLoopTags(title,text);
 
-      sheet.title =
-        document.getElementById("loopTitle").value;
+  const status = document.getElementById("loopSaveStatus");
+  if(status) status.textContent = "Sparar...";
 
-      sheet.text =
-        document.getElementById("loopText").value;
+  clearTimeout(loopSaveTimer);
 
-      sheet.tags =
-        extractLoopTags(
-          sheet.title,
-          sheet.text
-        );
+  loopSaveTimer = setTimeout(async () => {
+
+    if(sheet.isTemp){
+
+      const newDoc = await addDoc(loopSheetsRef,{
+        title,
+        text,
+        tags,
+        createdAt:Date.now(),
+        updatedAt:Date.now()
+      });
+
+      loopActiveSheetId = newDoc.id;
+
+    } else {
+
+      await updateDoc(
+        doc(db, "loopSheets", sheet.id),
+        {
+          title,
+          text,
+          tags,
+          updatedAt: Date.now()
+        }
+      );
+    }
+
+    if(status) status.textContent = "Sparat";
+
+  }, 250);
+}
 
       renderLoopActiveTags();
       renderLoopSheetList();
