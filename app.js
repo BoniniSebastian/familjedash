@@ -1013,7 +1013,6 @@ setInterval(updateTimerBar, 1000);
 /* NOTES */
 
 const notesRef = doc(db, "snabbanteckningar", "main");
-const loopSheetsRef = collection(db, "loopSheets");
 
 async function loadNote(){
   const snap = await getDoc(notesRef);
