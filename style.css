@@ -1643,4 +1643,32 @@ body{
     right:20px;
     bottom:calc(env(safe-area-inset-bottom) + 24px);
   }
+
+/* MOBILE FIX - VISA RADERA DROP I EDITOR */
+
+@media (max-width:900px){
+
+  .loop-sheet-editor{
+    padding-bottom:calc(env(safe-area-inset-bottom) + 210px);
+  }
+
+  .loop-editor-bottom{
+    position:sticky;
+    bottom:calc(env(safe-area-inset-bottom) + 86px);
+    z-index:260;
+
+    padding:12px 0;
+
+    background:rgba(255,255,255,.42);
+    backdrop-filter:blur(24px) saturate(1.5);
+    -webkit-backdrop-filter:blur(24px) saturate(1.5);
+
+    border-top:1px solid rgba(255,255,255,.45);
+  }
+
+  .loop-delete-sheet{
+    font-size:14px;
+    font-weight:800;
+    color:#061926 !important;
+  }
 }
