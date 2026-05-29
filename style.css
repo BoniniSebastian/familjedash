@@ -1644,31 +1644,52 @@ body{
     bottom:calc(env(safe-area-inset-bottom) + 24px);
   }
 
-/* MOBILE FIX - VISA RADERA DROP I EDITOR */
+/* MOBILE FIX - DISKRET RADERA DROP */
 
 @media (max-width:900px){
 
   .loop-sheet-editor{
-    padding-bottom:calc(env(safe-area-inset-bottom) + 210px);
+    padding-bottom:calc(env(safe-area-inset-bottom) + 180px);
   }
 
   .loop-editor-bottom{
     position:sticky;
-    bottom:calc(env(safe-area-inset-bottom) + 86px);
+    bottom:calc(env(safe-area-inset-bottom) + 84px);
     z-index:260;
 
-    padding:12px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 
-    background:rgba(255,255,255,.42);
-    backdrop-filter:blur(24px) saturate(1.5);
-    -webkit-backdrop-filter:blur(24px) saturate(1.5);
+    padding:0;
+    margin-top:40px;
 
-    border-top:1px solid rgba(255,255,255,.45);
+    background:transparent;
+    border:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+
+  .loop-save-status{
+    font-size:12px;
+    color:rgba(6,25,38,.42) !important;
   }
 
   .loop-delete-sheet{
-    font-size:14px;
-    font-weight:800;
+    padding:10px 14px;
+    border-radius:999px;
+
+    background:rgba(255,255,255,.42);
     color:#061926 !important;
+
+    font-size:13px;
+    font-weight:800;
+
+    backdrop-filter:blur(22px) saturate(1.45);
+    -webkit-backdrop-filter:blur(22px) saturate(1.45);
+
+    box-shadow:
+      0 12px 40px rgba(0,0,0,.10),
+      inset 0 1px 0 rgba(255,255,255,.7);
   }
 }
