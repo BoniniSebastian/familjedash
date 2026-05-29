@@ -1128,7 +1128,7 @@ body{
 .loop360{
   position:fixed;
   inset:0;
-  z-index:120;
+  z-index:9999;
   overflow:hidden;
   background:
     radial-gradient(circle at 18% 18%, rgba(0,207,255,.55), transparent 34%),
@@ -1643,58 +1643,4 @@ body{
     right:20px;
     bottom:calc(env(safe-area-inset-bottom) + 24px);
   }
-}
-
-/* QUICK FIX - DROPS ABOVE DASHBOARD */
-
-.loop360{
-  z-index:9999 !important;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(0,207,255,.65), transparent 34%),
-    radial-gradient(circle at 82% 22%, rgba(255,77,166,.55), transparent 38%),
-    radial-gradient(circle at 52% 88%, rgba(139,92,255,.50), transparent 40%),
-    linear-gradient(180deg,#dcecf3 0%,#cfe3ec 45%,#bdd8e4 100%) !important;
-  color:#061926 !important;
-}
-
-.loop360,
-.loop360 *{
-  color:#061926 !important;
-}
-
-.loop-sidebar,
-.loop-sheet-list{
-  color:#061926 !important;
-}
-
-.loop-sheet-row-title,
-.loop-sheet-row-preview,
-.loop-sheet-row-tags,
-.loop-title-input,
-.loop-textarea,
-.loop-logo,
-.loop-active-filter,
-.loop-tag,
-.loop-pill,
-.loop-save-status,
-.loop-delete-sheet{
-  color:#061926 !important;
-}
-
-.loop-sheet-editor{
-  color:#061926 !important;
-}
-
-.loop-textarea::placeholder,
-.loop-title-input::placeholder{
-  color:rgba(6,25,38,.38) !important;
-}
-
-.loop-new-sheet{
-  z-index:10020 !important;
-}
-
-.loop-close{
-  z-index:10030 !important;
-  color:#061926 !important;
 }
